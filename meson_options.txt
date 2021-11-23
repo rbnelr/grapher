@@ -1,0 +1,2 @@
+
+option('tracy', type : 'boolean', value : false, description : 'compile in tracy instrumentation via -DTRACY_ENABLE')

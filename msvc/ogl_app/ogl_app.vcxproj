@@ -1,0 +1,470 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Tracy|Win32">
+      <Configuration>Tracy</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Tracy|x64">
+      <Configuration>Tracy</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Validate|Win32">
+      <Configuration>Validate</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Validate|x64">
+      <Configuration>Validate</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{9c31906a-8bd6-423d-843b-ae22cdfe86eb}</ProjectGuid>
+    <RootNamespace>oglapp</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Validate|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tracy|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Validate|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tracy|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Validate|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Tracy|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Validate|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Tracy|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Validate|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tracy|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)</OutDir>
+    <TargetName>$(ProjectName)_dbg</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)</OutDir>
+    <TargetName>$(ProjectName)_rel</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Validate|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)</OutDir>
+    <TargetName>$(ProjectName)_val</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tracy|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)</OutDir>
+    <TargetName>$(ProjectName)_tracy</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Validate|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Tracy|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>
+      </SDLCheck>
+      <PreprocessorDefinitions>BUILD_DEBUG=1;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\common;$(SolutionDir)..\..\..\common\dear_imgui;$(SolutionDir)..\..\..\common\dear_imgui_custom;$(SolutionDir)..\..\..\common\glad;$(SolutionDir)..\..\..\common\glfw-3.3.5\include;$(SolutionDir)..\..\..\common\kisslib\tracy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ShowIncludes>false</ShowIncludes>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\common\glfw-3.3.5\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3_static_dbg.lib;Winmm.lib;Avrt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>
+      </SDLCheck>
+      <PreprocessorDefinitions>BUILD_RELEASE=1;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\common;$(SolutionDir)..\..\..\common\dear_imgui;$(SolutionDir)..\..\..\common\dear_imgui_custom;$(SolutionDir)..\..\..\common\glad;$(SolutionDir)..\..\..\common\glfw-3.3.5\include;$(SolutionDir)..\..\..\common\kisslib\tracy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <StringPooling>true</StringPooling>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ShowIncludes>false</ShowIncludes>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\common\glfw-3.3.5\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3_static_rel.lib;Winmm.lib;Avrt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Validate|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>
+      </SDLCheck>
+      <PreprocessorDefinitions>BUILD_VALIDATE=1;_CRT_SECURE_NO_WARNINGS;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\common;$(SolutionDir)..\..\..\common\dear_imgui;$(SolutionDir)..\..\..\common\dear_imgui_custom;$(SolutionDir)..\..\..\common\glad;$(SolutionDir)..\..\..\common\glfw-3.3.5\include;$(SolutionDir)..\..\..\common\kisslib\tracy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <StringPooling>true</StringPooling>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ShowIncludes>false</ShowIncludes>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\common\glfw-3.3.5\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3_static_rel.lib;Winmm.lib;Avrt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Tracy|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>
+      </SDLCheck>
+      <PreprocessorDefinitions>BUILD_TRACY=1;TRACY_ENABLE;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\common;$(SolutionDir)..\..\..\common\dear_imgui;$(SolutionDir)..\..\..\common\dear_imgui_custom;$(SolutionDir)..\..\..\common\glad;$(SolutionDir)..\..\..\common\glfw-3.3.5\include;$(SolutionDir)..\..\..\common\kisslib\tracy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <StringPooling>true</StringPooling>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ShowIncludes>false</ShowIncludes>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\common\glfw-3.3.5\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3_static_rel.lib;Winmm.lib;Avrt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\common\dear_imgui\imgui.cpp" />
+    <ClCompile Include="..\..\..\common\dear_imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\..\..\common\dear_imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\..\..\common\dear_imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\..\..\common\dear_imgui\misc\cpp\imgui_stdlib.cpp" />
+    <ClCompile Include="..\..\..\common\dear_imgui_custom\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\..\..\common\dear_imgui_custom\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="..\..\..\common\engine.cpp" />
+    <ClCompile Include="..\..\..\common\glad\glad.c" />
+    <ClCompile Include="..\..\..\common\kisslib\allocator.cpp" />
+    <ClCompile Include="..\..\..\common\kisslib\collision.cpp" />
+    <ClCompile Include="..\..\..\common\kisslib\file_io.cpp" />
+    <ClCompile Include="..\..\..\common\kisslib\random.cpp" />
+    <ClCompile Include="..\..\..\common\kisslib\read_directory.cpp" />
+    <ClCompile Include="..\..\..\common\kisslib\stb_image.cpp" />
+    <ClCompile Include="..\..\..\common\kisslib\stb_rect_pack.cpp" />
+    <ClCompile Include="..\..\..\common\kisslib\stb_truetype.cpp" />
+    <ClCompile Include="..\..\..\common\kisslib\string.cpp" />
+    <ClCompile Include="..\..\..\common\kisslib\threadpool.cpp" />
+    <ClCompile Include="..\..\..\common\kisslib\timer.cpp" />
+    <ClCompile Include="..\..\..\common\kisslib\tracy\TracyClient.cpp" />
+    <ClCompile Include="..\..\..\common\opengl.cpp" />
+    <ClCompile Include="..\..\..\common\opengl_text.cpp" />
+    <ClCompile Include="..\..\grapher.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\common\camera.hpp" />
+    <ClInclude Include="..\..\..\common\common.hpp" />
+    <ClInclude Include="..\..\..\common\common_app.hpp" />
+    <ClInclude Include="..\..\..\common\dear_imgui\imconfig.h" />
+    <ClInclude Include="..\..\..\common\dear_imgui\imgui.h" />
+    <ClInclude Include="..\..\..\common\dear_imgui\imgui_internal.h" />
+    <ClInclude Include="..\..\..\common\dear_imgui\imstb_rectpack.h" />
+    <ClInclude Include="..\..\..\common\dear_imgui\imstb_textedit.h" />
+    <ClInclude Include="..\..\..\common\dear_imgui\imstb_truetype.h" />
+    <ClInclude Include="..\..\..\common\dear_imgui_custom\dear_imgui.hpp" />
+    <ClInclude Include="..\..\..\common\dear_imgui_custom\imgui_impl_glfw.h" />
+    <ClInclude Include="..\..\..\common\dear_imgui_custom\imgui_impl_opengl3.h" />
+    <ClInclude Include="..\..\..\common\glad\glad.h" />
+    <ClInclude Include="..\..\..\common\glad\khrplatform.h" />
+    <ClInclude Include="..\..\..\common\input.hpp" />
+    <ClInclude Include="..\..\..\common\input_buttons.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\allocator.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\animation.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\bit_twiddling.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\circular_buffer.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\clean_windows_h.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\collision.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\containers.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\file_io.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\image.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\bool2.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\bool3.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\bool4.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float2.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float2x2.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float2x3.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float3.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float3x3.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float3x4.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float4.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float4x4.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int2.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int3.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int4.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int64.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int64v2.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int64v3.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int64v4.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\transform2d.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\transform3d.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\uint8.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\uint8v2.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\uint8v3.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\uint8v4.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\kissmath_colors.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\macros.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\parse.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\profiling.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\random.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\raw_array.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\read_directory.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\running_average.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\serialization.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\stb_image.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\stb_rect_pack.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\stb_truetype.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\stl_extensions.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\string.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\string_buf.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\threadpool.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\threadsafe_queue.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\timer.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\tracy\Tracy.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\tracy\TracyC.h" />
+    <ClInclude Include="..\..\..\common\kisslib\tracy\TracyOpenGL.hpp" />
+    <ClInclude Include="..\..\..\common\opengl.hpp" />
+    <ClInclude Include="..\..\..\common\opengl_text.hpp" />
+    <ClInclude Include="..\..\..\common\window.hpp" />
+    <ClInclude Include="..\..\equations.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\common\kisslib\kissmath\output\bool2.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\bool3.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\bool4.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\float.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\float2.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\float2x2.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\float2x3.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\float3.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\float3x3.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\float3x4.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\float4.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\float4x4.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\int.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\int2.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\int3.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\int4.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\int64.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\int64v2.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\int64v3.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\int64v4.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\transform2d.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\transform3d.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\uint8.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\uint8v2.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\uint8v3.inl" />
+    <None Include="..\..\..\common\kisslib\kissmath\output\uint8v4.inl" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
