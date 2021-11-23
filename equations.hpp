@@ -11,9 +11,11 @@ enum TokenType {
 	T_MINUS,
 	T_MULTIPLY,
 	T_DIVIDE,
+	T_POWER,
 
 	T_PAREN_OPEN,
 	T_PAREN_CLOSE,
+	T_COMMA,
 
 	T_EQUALS,
 };
@@ -35,51 +37,55 @@ bool tokenize (const char* str, std::vector<Token>* tok, std::string* err_msg) {
 	using namespace parse;
 
 	const char* cur = str;
-	while (*cur != '\0') {
+	for (;;) {
+		whitespace(cur); // skip all whitespace until next token
+
+		if (*cur == '\0')
+			break; // stop
+
 		const char* start = cur;
 
-		if (is_whitespace_c(*cur)) {
-			cur++; // skip
-		}
-		else if (is_decimal_c(*cur)) {
-			
-			float f;
-			if (!parse_float(cur, &f)) {
+		TokenType type;
+		float value = 0;
+
+		if (is_decimal_c(*cur)) {
+			if (!parse_float(cur, &value)) {
 				*err_msg = prints("tokenize: parse_float error: \n\"%s\"", cur);
 				return false;
 			}
 
-			tok->push_back({ T_LITERAL, f, start, cur });
+			type = T_LITERAL;
 		}
 		else if (is_ident_start_c(*cur)) {
-			
+
 			while (is_ident_c(*cur))
 				cur++; // find end of identifier
 
-			tok->push_back({ T_IDENTIFIER, 0, start, cur });
+			type = T_IDENTIFIER;
 		}
 		else {
-			TokenType type;
 			switch (*cur) {
 				case '+': type = T_PLUS;          break;
 				case '-': type = T_MINUS;         break;
 				case '*': type = T_MULTIPLY;      break;
 				case '/': type = T_DIVIDE;        break;
+				case '^': type = T_POWER;         break;
 
 				case '(': type = T_PAREN_OPEN;    break;
 				case ')': type = T_PAREN_CLOSE;   break;
+				case ',': type = T_COMMA;         break;
 
 				case '=': type = T_EQUALS;        break;
-
+				
 				default: {
 					*err_msg = prints("tokenize: unknown token: \n\"%s\"", cur);
 					return false;
 				}
 			}
 			cur++; // single-char token
-
-			tok->push_back({ type, 0, start, cur });
 		}
+
+		tok->push_back({ type, value, start, cur });
 	}
 
 	tok->push_back({ T_EOI, 0, cur, cur+1 });
@@ -87,38 +93,45 @@ bool tokenize (const char* str, std::vector<Token>* tok, std::string* err_msg) {
 }
 
 enum OPType {
-	OP_ADD,        // pop a, pop b, push a+b
-	OP_SUBSTRACT,  // pop a, pop b, push a-b
-	OP_MULTIPLY,   // pop a, pop b, push a*b
-	OP_DIVIDE,     // pop a, pop b, push a/b
+	OP_VALUE,        // push value
+	OP_VARIABLE,     // push vars.lookup(varname)
 
-	OP_VALUE,      // push value
-	OP_VARIABLE,   // push vars.lookup(varname)
+	OP_ADD,          // pop a, pop b, push a+b
+	OP_SUBSTRACT,    // pop a, pop b, push a-b
+	OP_MULTIPLY,     // pop a, pop b, push a*b
+	OP_DIVIDE,       // pop a, pop b, push a/b
+	OP_POW,          // pop a, pop b, push a^b
+
+	OP_UNARY_NEGATE, // pop a,        push -a
 };
 inline constexpr const char* OPType_str[] = {
+	"OP_VALUE",
+	"OP_VARIABLE",
+
 	"OP_ADD",
 	"OP_SUBSTRACT",
 	"OP_MULTIPLY",
 	"OP_DIVIDE",
+	"OP_POW",
 
-	"OP_VALUE",
-	"OP_VARIABLE",
+	"OP_UNARY_NEGATE",
 };
 
 inline constexpr bool is_binary_op (TokenType tok) {
-	return tok >= T_PLUS && tok <= T_DIVIDE;
+	return tok >= T_PLUS && tok <= T_POWER;
 }
 inline constexpr bool is_binary_op (OPType code) {
-	return code >= OP_ADD && code <= OP_VALUE;
+	return code >= OP_ADD && code <= OP_POW;
 }
 
 inline constexpr uint8_t BINARY_OP_PRECEDENCE[] = {
-	1, // T_PLUS,
-	1, // T_MINUS,
-	0, // T_MULTIPLY,
-	0, // T_DIVIDE,
+	2, // T_PLUS,
+	2, // T_MINUS,
+	1, // T_MULTIPLY,
+	1, // T_DIVIDE,
+	0, // T_POWER,
 };
-inline constexpr int MAX_PRECEDENCE = 1;
+inline constexpr int MAX_PRECEDENCE = 2;
 
 inline int get_binary_op_precedence (TokenType tok) {
 	assert(is_binary_op(tok));
@@ -132,9 +145,6 @@ struct Operation {
 	float            value;
 };
 
-inline bool is_literal_or_variable (Token& tok) {
-	return tok.type == T_LITERAL || tok.type == T_IDENTIFIER;
-}
 inline Operation literal_or_variable (Token& tok) {
 	OPType type;
 	switch (tok.type) {
@@ -147,17 +157,19 @@ inline Operation literal_or_variable (Token& tok) {
 	return { type, (std::string_view)tok, tok.value };
 }
 inline Operation binary_op (Token& tok) {
-	return { (OPType)(tok.type - T_PLUS), (std::string_view)tok, tok.value };
+	return { (OPType)(tok.type - T_PLUS + OP_ADD), (std::string_view)tok, tok.value };
 }
 
-inline bool parse_expression (Token*& tok, std::vector<Operation>& ops, int precedence, std::string* last_err) {
+inline bool value_expression (Token*& tok, std::vector<Operation>& ops, std::string* last_err);
+
+inline bool recurse_subexpression (Token*& tok, std::vector<Operation>& ops, std::string* last_err, int precedence) {
 
 	for (;;) {
-		if (tok->type == T_EOI)
+		if (tok->type == T_EOI || tok->type == T_PAREN_CLOSE)
 			return true;
 
 		if (!is_binary_op(tok[0].type)) {
-			*last_err = "syntax error, binary operator expected";
+			*last_err = "syntax error, binary operator expected!";
 			return false;
 		}
 
@@ -167,27 +179,23 @@ inline bool parse_expression (Token*& tok, std::vector<Operation>& ops, int prec
 			return true;
 		} else if (op_prec < precedence) {
 			// right hand operator has lower precedence, recurse into next precedence level
-			if (!parse_expression(tok, ops, precedence - 1, last_err))
-				return false; // propage error
+			if (!recurse_subexpression(tok, ops, last_err, precedence - 1))
+				return false; // propagate error
 		} else {
 			// operator precedence matches recursion level, handle operand-operator pair here
 
-			if (!is_literal_or_variable(tok[1])) {
-				*last_err = "syntax error, literal or number expected";
-				return false;
-			}
+			auto& op = *tok++;
 
-			auto& op  = *tok++;
-			auto& b   = *tok++;
+			if (!value_expression(tok, ops, last_err))
+				return false; // propagate error
+
 			auto& op2 = *tok;
-
-			ops.push_back( literal_or_variable(b) );
 
 			if (is_binary_op(tok[0].type)) {
 				int op2_prec = get_binary_op_precedence(tok[0].type);
 				if (op2_prec < precedence) {
-					if (!parse_expression(tok, ops, precedence - 1, last_err))
-						return false; // propage error
+					if (!recurse_subexpression(tok, ops, last_err, precedence - 1))
+						return false; // propagate error
 				}
 			}
 
@@ -195,14 +203,60 @@ inline bool parse_expression (Token*& tok, std::vector<Operation>& ops, int prec
 		}
 	}
 }
+
+inline bool value_expression (Token*& tok, std::vector<Operation>& ops, std::string* last_err) {
+	bool unary_negate = false;
+	if (tok->type == T_MINUS || tok->type == T_PLUS) {
+		unary_negate = tok->type == T_MINUS;
+		tok++;
+	}
+
+	if (tok->type == T_PAREN_OPEN) {
+		tok++;
+
+		if (!value_expression(tok, ops, last_err))
+			return false; // propagate error
+
+		if (!recurse_subexpression(tok, ops, last_err, MAX_PRECEDENCE))
+			return false; // propagate error
+
+		if (tok->type != T_PAREN_CLOSE) {
+			*last_err = "syntax error, '(' not closed with ')'!";
+				return false;
+		}
+		tok++;
+
+	} else {
+		if (!(tok->type == T_LITERAL || tok->type == T_IDENTIFIER)) {
+			*last_err = "syntax error, literal or variable expected!";
+			return false;
+		}
+
+		ops.push_back( literal_or_variable(*tok++) );
+	}
+
+	if (unary_negate)
+		ops.push_back({ OP_UNARY_NEGATE, "", 0 });
+	return true;
+}
+
 inline bool parse_equation (Token*& tok, std::vector<Operation>& ops, std::string* last_err) {
-	if (!is_literal_or_variable(*tok)) {
-		*last_err = "syntax error, literal or number expected";
+	if (!value_expression(tok, ops, last_err))
+		return false; // propagate error
+
+	if (!recurse_subexpression(tok, ops, last_err, MAX_PRECEDENCE))
+		return false; // propagate error
+
+	if (tok->type == T_PAREN_CLOSE) {
+		*last_err = "syntax error, ')' without matching '('!";
 		return false;
 	}
-	ops.push_back( literal_or_variable(*tok++) );
+	if (tok->type != T_EOI) {
+		*last_err = "syntax error, end of input expected!";
+		return false;
+	}
 
-	return parse_expression(tok, ops, MAX_PRECEDENCE, last_err);
+	return true;
 }
 
 struct Variables {
@@ -217,6 +271,14 @@ struct Variables {
 		return false;
 	}
 };
+
+float mypow (float a, float b) {
+	//if (b == 2.0f) return a*a;
+	//if (b == 3.0f) return a*a*a;
+	//if (b == 4.0f) return (a*a)*(a*a);
+
+	return powf(a, b);
+}
 
 bool eval (Variables& vars, std::vector<Operation>& ops, float* result, std::string* last_err) {
 	static constexpr int STACK_SIZE = 64;
@@ -244,6 +306,19 @@ bool eval (Variables& vars, std::vector<Operation>& ops, float* result, std::str
 				}
 			} break;
 
+			case OP_UNARY_NEGATE: {
+				//assert(stack_idx >= 1);
+				if (stack_idx < 1) {
+					errstr = "stack underflow!";
+					goto error;
+				}
+
+				stack_idx -= 1;
+				float a = stack[stack_idx];
+
+				value = -a;
+			} break;
+
 			default: {
 				if (!is_binary_op(op.code)) {
 					errstr = "unknown op type!";
@@ -265,6 +340,7 @@ bool eval (Variables& vars, std::vector<Operation>& ops, float* result, std::str
 					case OP_SUBSTRACT : value = a - b; break;
 					case OP_MULTIPLY  : value = a * b; break;
 					case OP_DIVIDE    : value = a / b; break;
+					case OP_POW       : value = mypow(a, b); break;
 					default: return false;
 				}
 			} break;
@@ -313,8 +389,16 @@ bool eval_str (std::vector<Operation>& ops, std::string* result, std::string* db
 				case OP_SUBSTRACT : value = prints("(%s - %s)", a.c_str(), b.c_str()); break;
 				case OP_MULTIPLY  : value = prints("(%s * %s)", a.c_str(), b.c_str()); break;
 				case OP_DIVIDE    : value = prints("(%s / %s)", a.c_str(), b.c_str()); break;
+				case OP_POW       : value = prints("(%s ^ %s)", a.c_str(), b.c_str()); break;
 				default: return false;
 			}
+		}
+		else if (code.code == OP_UNARY_NEGATE) {
+			assert(stack.size() >= 1);
+			std::string a = std::move(stack[stack.size() - 1]);
+			stack.resize(stack.size() - 1);
+
+			value = prints("-(%s)", a.c_str());
 		}
 		else {
 			*dbg_str = "unknown op type!";
@@ -361,7 +445,7 @@ struct Equation {
 		
 		auto* tok = &tokens[0];
 		ops.clear();
-		valid = parse_equation(tok, ops, &last_err) && tok->type == T_EOI;
+		valid = parse_equation(tok, ops, &last_err);
 
 		if (!valid)
 			ops.clear();
@@ -373,11 +457,11 @@ struct Equation {
 		return valid;
 	}
 	std::string dbg_eval () {
-		if (!valid) return "invalid_equation";
+		if (!valid) return "invalid equation";
 
 		std::string result, err;
 		if (!eval_str(ops, &result, &err))
-			return "parsing error: "+ err;
+			return "eval error: "+ err;
 
 		return result;
 	}
@@ -387,28 +471,54 @@ void dbg_equation (Equation& eq) {
 	ImGui::Text(eq.dbg_eval().c_str());
 }
 
+static constexpr float4 colors[] = {
+	float4(1,0,0,1),
+	float4(0,1,0,1),
+	float4(0,0,1,1),
+	float4(1,1,0,1),
+	float4(1,0,1,1),
+	float4(0,1,1,1),
+	float4(0.5f,0.5f,0.5f,1),
+};
+
 struct Equations {
 	std::vector<Equation> equations;
 
 	Equations () {
-		equations.emplace_back("x",             float4(1,0,0,1));
-		equations.emplace_back("x+3",           float4(0,1,0,1));
-		equations.emplace_back("0.5*x",           float4(0,1,0,1));
-		equations.emplace_back("4+x-8",           float4(0,1,0,1));
-		equations.emplace_back("3+x/3",         float4(0,0,1,1));
-		equations.emplace_back("8/x+5",         float4(0,0,1,1));
-		equations.emplace_back("x+3*1*2",       float4(1,1,0,1));
-		equations.emplace_back("-5*x+0.2*x",       float4(1,1,0,1));
-		equations.emplace_back("x*x*x+x",       float4(1,1,0,1));
-		equations.emplace_back("x+x/x+3",       float4(1,1,0,1));
+		int coli = 0;
 
-		//equations.emplace_back("3",             float4(1,0,0,1));
-		//equations.emplace_back("x",             float4(0,1,0,1));
-		//equations.emplace_back("x * -0.5",      float4(0,0,1,1));
-		//equations.emplace_back("2+1/x",         float4(1,1,0,1));
-		//equations.emplace_back("1/(x-1)",       float4(1,0,1,1));
-		//equations.emplace_back("2-1/(x-1)",     float4(0,1,1,1));
-		//equations.emplace_back("sqrt(x)",       float4(0.5f,0.5f,0.5f,1));
+		equations.emplace_back("x^2",             colors[coli++ % ARRLEN(colors)]);
+		equations.emplace_back("2^x",             colors[coli++ % ARRLEN(colors)]);
+		equations.emplace_back("2^(x-2)",         colors[coli++ % ARRLEN(colors)]);
+		equations.emplace_back("4^3^2",           colors[coli++ % ARRLEN(colors)]);
+		equations.emplace_back("4^(3^2)",         colors[coli++ % ARRLEN(colors)]);
+		equations.emplace_back("(4^3)^2",         colors[coli++ % ARRLEN(colors)]);
+
+		//equations.emplace_back("(x)",            colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("(x+2)",          colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("(x+2*3)",        colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("5*(x+3)",        colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("(5*(x+3))",      colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("2-(5*(x+3)-6)",  colors[coli++ % ARRLEN(colors));
+
+		//equations.emplace_back("x",             colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("x+3",           colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("0.5*x",         colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("4+x-8",         colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("3+x/3",         colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("8/x+5",         colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("x+3*1*2",       colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("-5*x+0.2*x",    colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("x*x*x+x",       colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("x+x/x+3",       colors[coli++ % ARRLEN(colors));
+
+		//equations.emplace_back("3",             colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("x",             colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("x * -0.5",      colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("2+1/x",         colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("1/(x-1)",       colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("2-1/(x-1)",     colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("sqrt(x)",       colors[coli++ % ARRLEN(colors));
 	}
 
 	void drag_drop_equations (int src, int dst) {
