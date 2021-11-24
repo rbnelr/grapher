@@ -412,7 +412,7 @@
     <ClInclude Include="..\..\..\common\kisslib\kissmath\output\uint8v4.hpp" />
     <ClInclude Include="..\..\..\common\kisslib\kissmath_colors.hpp" />
     <ClInclude Include="..\..\..\common\kisslib\macros.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\parse.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\strparse.hpp" />
     <ClInclude Include="..\..\..\common\kisslib\profiling.hpp" />
     <ClInclude Include="..\..\..\common\kisslib\random.hpp" />
     <ClInclude Include="..\..\..\common\kisslib\raw_array.hpp" />
@@ -435,6 +435,9 @@
     <ClInclude Include="..\..\..\common\opengl_text.hpp" />
     <ClInclude Include="..\..\..\common\window.hpp" />
     <ClInclude Include="..\..\equations.hpp" />
+    <ClInclude Include="..\..\execute.hpp" />
+    <ClInclude Include="..\..\parse.hpp" />
+    <ClInclude Include="..\..\tokenize.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\common\kisslib\kissmath\output\bool2.inl" />

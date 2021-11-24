@@ -147,9 +147,6 @@
     <ClInclude Include="..\..\..\common\kisslib\macros.hpp">
       <Filter>common\kisslib</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\parse.hpp">
-      <Filter>common\kisslib</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\common\kisslib\profiling.hpp">
       <Filter>common\kisslib</Filter>
     </ClInclude>
@@ -325,6 +322,12 @@
       <Filter>common\kisslib\stb</Filter>
     </ClInclude>
     <ClInclude Include="..\..\equations.hpp" />
+    <ClInclude Include="..\..\tokenize.hpp" />
+    <ClInclude Include="..\..\parse.hpp" />
+    <ClInclude Include="..\..\execute.hpp" />
+    <ClInclude Include="..\..\..\common\kisslib\strparse.hpp">
+      <Filter>common\kisslib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\common\kisslib\kissmath\output\bool2.inl">

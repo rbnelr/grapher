@@ -235,7 +235,8 @@ struct App : public IApp {
 					float val;
 					success = eval(eq, t, &val);
 
-					lines.draw_line(float3(prevt, prev, 0), float3(t, val, 0), eq.col);
+					if (!isnan(prev) && !isnan(val))
+						lines.draw_line(float3(prevt, prev, 0), float3(t, val, 0), eq.col);
 
 					prevt = t;
 					prev = val;
