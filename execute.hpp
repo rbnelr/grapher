@@ -9,6 +9,17 @@ float mypow (float a, float b) {
 
 	return powf(a, b);
 }
+float mymod (float a, float b) {
+	float val = fmodf(a, b);
+	//if (b > 0.0f) {
+	//	if (a < 0.0f) val += b;
+	//} else {
+	//	if (a > 0.0f) val += b;
+	//}
+	if (a*b < 0.0f) // differing sign
+		val += b;
+	return val;
+}
 
 struct Variables {
 	float x;
@@ -23,27 +34,76 @@ struct Variables {
 	}
 };
 
+inline bool exec_sqrt (int argc, float* args, float* result, const char** errstr) {
+	if (argc != 1) {
+		*errstr = "sqrt takes 1 argument!";
+		return false;
+	}
+	*result = sqrtf(args[0]);
+	return true;
+}
+inline bool exec_abs (int argc, float* args, float* result, const char** errstr) {
+	if (argc != 1) {
+		*errstr = "abs takes 1 argument!";
+		return false;
+	}
+	*result = fabsf(args[0]);
+	return true;
+}
+inline bool exec_sin (int argc, float* args, float* result, const char** errstr) {
+	if (argc != 1) {
+		*errstr = "sin takes 1 argument!";
+		return false;
+	}
+	*result = sinf(args[0]);
+	return true;
+}
+inline bool exec_cos (int argc, float* args, float* result, const char** errstr) {
+	if (argc != 1) {
+		*errstr = "cos takes 1 argument!";
+		return false;
+	}
+	*result = cosf(args[0]);
+	return true;
+}
+inline bool exec_tan (int argc, float* args, float* result, const char** errstr) {
+	if (argc != 1) {
+		*errstr = "tan takes 1 argument!";
+		return false;
+	}
+	*result = tanf(args[0]);
+	return true;
+}
+inline bool exec_mod (int argc, float* args, float* result, const char** errstr) {
+	if (argc != 2) {
+		*errstr = "mod takes 2 arguments!";
+		return false;
+	}
+	*result = mymod(args[0], args[1]);
+	return true;
+}
+
 inline bool exec_min (int argc, float* args, float* result, const char** errstr) {
-	if (argc <= 0) {
-		*errstr = "exec_min() failed, need at least 1 argument!";
+	if (argc < 2) {
+		*errstr = "min() takes at least 2 argument!";
 		return false;
 	}
 
-	float minf = INF;
-	for (int i=0; i<argc; ++i)
+	float minf = args[0];
+	for (int i=1; i<argc; ++i)
 		minf = min(minf, args[i]);
 
 	*result = minf;
 	return true;
 }
 inline bool exec_max (int argc, float* args, float* result, const char** errstr) {
-	if (argc <= 0) {
-		*errstr = "exec_max() failed, need at least 1 argument!";
+	if (argc < 2) {
+		*errstr = "max() takes at least 2 argument!";
 		return false;
 	}
 
-	float maxf = INF;
-	for (int i=0; i<argc; ++i)
+	float maxf = args[0];
+	for (int i=1; i<argc; ++i)
 		maxf = max(maxf, args[i]);
 
 	*result = maxf;
@@ -52,47 +112,15 @@ inline bool exec_max (int argc, float* args, float* result, const char** errstr)
 
 inline bool call_func (Operation& op, float* args, float* result, const char** errstr) {
 	
-	if (op.text == "sqrt") {
-		if (op.argc != 1) {
-			*errstr = "sqrt() takes 1 argument!";
-			return false;
-		}
-		*result = sqrtf(args[0]);
-	}
-	else if (op.text == "abs") {
-		if (op.argc != 1) {
-			*errstr = "abs() takes 1 argument!";
-			return false;
-		}
-		*result = fabsf(args[0]);
-	}
-	else if (op.text == "sin") {
-		if (op.argc != 1) {
-			*errstr = "sin() takes 1 argument!";
-			return false;
-		}
-		*result = sinf(args[0]);
-	}
-	else if (op.text == "cos") {
-		if (op.argc != 1) {
-			*errstr = "coa() takes 1 argument!";
-			return false;
-		}
-		*result = cosf(args[0]);
-	}
-	else if (op.text == "tan") {
-		if (op.argc != 1) {
-			*errstr = "tan() takes 1 argument!";
-			return false;
-		}
-		*result = tanf(args[0]);
-	}
-	else if (op.text == "min") {
-		exec_min(op.argc, args, result, errstr);
-	}
-	else if (op.text == "max") {
-		exec_max(op.argc, args, result, errstr);
-	} else {
+	if      (op.text == "sqrt") exec_sqrt(op.argc, args, result, errstr);
+	else if (op.text == "abs")  exec_abs(op.argc, args, result, errstr);
+	else if (op.text == "sin")  exec_sin(op.argc, args, result, errstr);
+	else if (op.text == "cos")  exec_cos(op.argc, args, result, errstr);
+	else if (op.text == "tan")  exec_tan(op.argc, args, result, errstr);
+	else if (op.text == "mod")  exec_mod(op.argc, args, result, errstr);
+	else if (op.text == "min")  exec_min(op.argc, args, result, errstr);
+	else if (op.text == "max")  exec_max(op.argc, args, result, errstr);
+	else {
 		*errstr = "unknown function!";
 		return false;
 	}
