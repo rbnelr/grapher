@@ -7,6 +7,7 @@ struct Equation {
 	float4 col;
 
 	bool valid = false;
+	bool exec_valid = false;
 	std::string last_err = "";
 
 	std::unique_ptr<char[]> string_buf; // pointers into std::string text seem to break? small string optimization?
@@ -35,15 +36,15 @@ struct Equation {
 		auto* tok = &tokens[0];
 		ops.clear();
 		valid = parse_equation(tok, ops, &last_err);
+		exec_valid = true;
 
 		if (!valid)
 			ops.clear();
 	}
 
 	bool evaluate (Variables& vars, float x, float* result) {
-		assert(valid);
-		valid = execute(vars, ops, result, &last_err);
-		return valid;
+		exec_valid = execute(vars, ops, result, &last_err);
+		return exec_valid;
 	}
 
 	std::string dbg_eval () {
@@ -77,48 +78,20 @@ struct Equations {
 	Equations () {
 		int coli = 0;
 
-		//equations.emplace_back("sqrt(1-x^2)                      ", colors[coli++ % ARRLEN(colors)]);
-		//equations.emplace_back("1/sqrt(x)                        ", colors[coli++ % ARRLEN(colors)]);
-		//equations.emplace_back("0.5*x^3 +0.3*x^2 -1.2*x +2       ", colors[coli++ % ARRLEN(colors)]);
-		//equations.emplace_back("sin(x)                           ", colors[coli++ % ARRLEN(colors)]);
-
-		//equations.emplace_back("abs(x)*0.5",        colors[coli++ % ARRLEN(colors)]);
-		//equations.emplace_back("sqrt(x)",           colors[coli++ % ARRLEN(colors)]);
-		//equations.emplace_back("1/sqrt(x)",         colors[coli++ % ARRLEN(colors)]);
-		//equations.emplace_back("max(x,-x)",         colors[coli++ % ARRLEN(colors)]);
-
-		//equations.emplace_back("x^2",             colors[coli++ % ARRLEN(colors)]);
-		//equations.emplace_back("2^x",             colors[coli++ % ARRLEN(colors)]);
-		//equations.emplace_back("2^(x-2)",         colors[coli++ % ARRLEN(colors)]);
-		//equations.emplace_back("4^3^2",           colors[coli++ % ARRLEN(colors)]);
-		//equations.emplace_back("4^(3^2)",         colors[coli++ % ARRLEN(colors)]);
-		//equations.emplace_back("(4^3)^2",         colors[coli++ % ARRLEN(colors)]);
-
-		//equations.emplace_back("(x)",            colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("(x+2)",          colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("(x+2*3)",        colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("5*(x+3)",        colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("(5*(x+3))",      colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("2-(5*(x+3)-6)",  colors[coli++ % ARRLEN(colors));
-
-		equations.emplace_back("x",             colors[coli++ % ARRLEN(colors)]);
-		equations.emplace_back("x+3",           colors[coli++ % ARRLEN(colors)]);
-		equations.emplace_back("0.5*x",         colors[coli++ % ARRLEN(colors)]);
-		equations.emplace_back("4+x-8",         colors[coli++ % ARRLEN(colors)]);
-		equations.emplace_back("3+x/3",         colors[coli++ % ARRLEN(colors)]);
-		equations.emplace_back("8/x+5",         colors[coli++ % ARRLEN(colors)]);
-		equations.emplace_back("x+3*1*2",       colors[coli++ % ARRLEN(colors)]);
-		equations.emplace_back("-5*x+0.2*x",    colors[coli++ % ARRLEN(colors)]);
-		equations.emplace_back("x*x*x+x",       colors[coli++ % ARRLEN(colors)]);
-		equations.emplace_back("x+x/x+3",       colors[coli++ % ARRLEN(colors)]);
-
-		//equations.emplace_back("3",             colors[coli++ % ARRLEN(colors)]);
 		//equations.emplace_back("x",             colors[coli++ % ARRLEN(colors)]);
-		//equations.emplace_back("x * -0.5",      colors[coli++ % ARRLEN(colors)]);
-		//equations.emplace_back("2+1/x",         colors[coli++ % ARRLEN(colors)]);
-		//equations.emplace_back("1/(x-1)",       colors[coli++ % ARRLEN(colors)]);
-		//equations.emplace_back("2-1/(x-1)",     colors[coli++ % ARRLEN(colors)]);
-		//equations.emplace_back("sqrt(x)",       colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("-x",            colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("(-x)",          colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("(((-x)))",      colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("abs(-x)",       colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("max(x, -x)",       colors[coli++ % ARRLEN(colors)]);
+
+		equations.emplace_back("a+b^c*d+e",             colors[coli++ % ARRLEN(colors)]);
+
+		equations.emplace_back("a*b/c",             colors[coli++ % ARRLEN(colors)]);
+		equations.emplace_back("a-b/c",             colors[coli++ % ARRLEN(colors)]);
+		equations.emplace_back("a/b-c",             colors[coli++ % ARRLEN(colors)]);
+		equations.emplace_back("a/b-c/d",           colors[coli++ % ARRLEN(colors)]);
+		equations.emplace_back("a-b/c-d",           colors[coli++ % ARRLEN(colors)]);
 	}
 
 	void drag_drop_equations (int src, int dst) {
@@ -168,12 +141,13 @@ struct Equations {
 				ImGui::EndDragDropTarget();
 			}
 
+			bool valid = it->valid && it->exec_valid;
 			ImGui::SameLine();
-			ImGui::PushStyleColor(0, !it->valid ? ImVec4(1,0,0,1) : ImVec4(1,1,1,1));
-			ImGui::SmallButton(!it->valid ? "!###err":" ###err");
+			ImGui::PushStyleColor(0, !valid ? ImVec4(1,0,0,1) : ImVec4(1,1,1,1));
+			ImGui::SmallButton(!valid ? "!###err":" ###err");
 			ImGui::PopStyleColor();
 
-			if (!it->valid && ImGui::IsItemHovered())
+			if (!valid && ImGui::IsItemHovered())
 				ImGui::SetTooltip(it->last_err.c_str());
 
 			ImGui::SameLine();

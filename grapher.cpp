@@ -228,12 +228,12 @@ struct App : public IApp {
 
 				float prevt = (float)start * res;
 				float prev;
-				bool success = eval(eq, prevt, &prev);
+				bool exec_valid = eval(eq, prevt, &prev);
 
-				for (int i=start+1; success && i<=end; ++i) {
+				for (int i=start+1; exec_valid && i<=end; ++i) {
 					float t = (float)i * res;
 					float val;
-					success = eval(eq, t, &val);
+					exec_valid = eval(eq, t, &val);
 
 					if (!isnan(prev) && !isnan(val))
 						lines.draw_line(float3(prevt, prev, 0), float3(t, val, 0), eq.col);
