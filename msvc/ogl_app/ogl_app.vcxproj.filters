@@ -328,6 +328,7 @@
     <ClInclude Include="..\..\..\common\kisslib\strparse.hpp">
       <Filter>common\kisslib</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\codegen.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\common\kisslib\kissmath\output\bool2.inl">

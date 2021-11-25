@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "parse.hpp"
+#include "codegen.hpp"
 #include "execute.hpp"
 
 struct Equation {
@@ -13,6 +14,8 @@ struct Equation {
 	std::unique_ptr<char[]> string_buf; // pointers into std::string text seem to break? small string optimization?
 	std::vector<Operation> ops;
 	
+	inline static bool optimize = true;
+
 	Equation (std::string_view text = "", float4 const& col = float4(1,1,1,1)): text{text}, col{col} {
 		parse();
 	}
@@ -33,13 +36,15 @@ struct Equation {
 			return;
 		}
 		
-		auto* tok = &tokens[0];
-		ops.clear();
-		valid = parse_equation(tok, ops, &last_err);
-		exec_valid = true;
+		auto ast = parse_equation(tokens.data(), &last_err);
+		if (ast == nullptr) {
+			valid = false;
+			return;
+		}
 
-		if (!valid)
-			ops.clear();
+		valid = generate_code(ast.get(), &ops, &last_err, optimize);
+
+		exec_valid = true;
 	}
 
 	bool evaluate (Variables& vars, float x, float* result) {
@@ -85,13 +90,13 @@ struct Equations {
 		//equations.emplace_back("abs(-x)",       colors[coli++ % ARRLEN(colors)]);
 		//equations.emplace_back("max(x, -x)",       colors[coli++ % ARRLEN(colors)]);
 
-		equations.emplace_back("a+b^c*d+e",             colors[coli++ % ARRLEN(colors)]);
+		equations.emplace_back("x^2 + -2/3 / sqrt(0.2)",             colors[coli++ % ARRLEN(colors)]);
 
-		equations.emplace_back("a*b/c",             colors[coli++ % ARRLEN(colors)]);
-		equations.emplace_back("a-b/c",             colors[coli++ % ARRLEN(colors)]);
-		equations.emplace_back("a/b-c",             colors[coli++ % ARRLEN(colors)]);
-		equations.emplace_back("a/b-c/d",           colors[coli++ % ARRLEN(colors)]);
-		equations.emplace_back("a-b/c-d",           colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("a*b/c",             colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("a-b/c",             colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("a/b-c",             colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("a/b-c/d",           colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("a-b/c-d",           colors[coli++ % ARRLEN(colors)]);
 	}
 
 	void drag_drop_equations (int src, int dst) {
@@ -175,6 +180,10 @@ struct Equations {
 		if (ImGui::Button("+")) {
 			equations.emplace_back("");
 		}
+
+		bool reparse = ImGui::Checkbox("codegen optimize", &Equation::optimize);
+		for (auto& eq : equations)
+			eq.parse();
 
 		ImGui::PopID();
 	}

@@ -1,7 +1,6 @@
 #pragma once
 #include "common.hpp"
 #include "tokenize.hpp"
-#include <stack>
 
 enum OPType {
 	OP_VALUE,        // push value
@@ -74,34 +73,22 @@ struct Operation {
 	};
 
 	std::string_view text;
-
-	Operation () {}
-	Operation (OPType code, Token& tok_for_text):
-		code{code},
-		text{(std::string_view)tok_for_text} {}
 };
 
 struct ASTNode;
 typedef std::unique_ptr<ASTNode> ast_ptr;
 
 struct ASTNode {
-	OPType           type;
-
-	union {
-		float        value;
-		int          argc;
-	};
-
-	std::string_view text;
+	Operation        op;
 
 	ast_ptr          next;
 	ast_ptr          child; // first child node, following are linked via next pointer
 };
 
-ast_ptr ast_node (OPType type, Token& tok_for_text) {
+inline ast_ptr ast_node (OPType opcode, Token& tok_for_text) {
 	ast_ptr node = std::make_unique<ASTNode>();
-	node->type = type;
-	node->text = (std::string_view)tok_for_text;
+	node->op.code = opcode;
+	node->op.text = (std::string_view)tok_for_text;
 	return node;
 }
 
@@ -134,26 +121,30 @@ inline ast_ptr atom (Token*& tok, std::string* last_err) {
 	}
 	else if (tok[0].type == T_IDENTIFIER && tok[1].type == T_PAREN_OPEN) {
 		// function call
-		ast_ptr funccall = ast_node(OP_FUNCCALL, *tok++);
-		tok++; // T_PAREN_OPEN
+		result = ast_node(OP_FUNCCALL, *tok);
+		tok += 2;
 
-		ast_ptr* arg_ptr = &funccall->child;
+		ast_ptr* arg_ptr = &result->child;
 
-		funccall->argc = 0;
+		int argc = 0;
 		for (;;) {
 			*arg_ptr = expression(tok, last_err);
 			if (!*arg_ptr) return nullptr;
 
-			funccall->argc++;
+			argc++;
 			arg_ptr = &(*arg_ptr)->next;
 
 			if (!(tok->type == T_COMMA || tok->type == T_PAREN_CLOSE)) {
 				*last_err = "syntax error, ',' or ')' expected!";
 				return nullptr;
 			}
-			if ((*tok++).type == T_PAREN_CLOSE)
+			if (tok->type == T_PAREN_CLOSE)
 				break;
+			tok++;
 		}
+		tok++;
+
+		result->op.argc = argc;
 	}
 	else {
 		OPType type;
@@ -163,8 +154,10 @@ inline ast_ptr atom (Token*& tok, std::string* last_err) {
 			*last_err = "syntax error, number or variable expected!";
 			return nullptr;
 		}
-		result = ast_node(type, *tok++);
-		result->value = tok->value;
+		result = ast_node(type, *tok);
+		result->op.value = tok->value;
+
+		tok++;
 	}
 
 	if (unary_minus) {
@@ -193,7 +186,9 @@ inline ast_ptr expression (Token*& tok, std::string* last_err, int min_prec) {
 		if (prec < min_prec)
 			break;
 
-		ast_ptr op = ast_node((OPType)(tok->type + (OP_ADD-T_PLUS)), *tok++);
+		auto op_type = (OPType)(tok->type + (OP_ADD-T_PLUS));
+		ast_ptr op = ast_node(op_type, *tok);
+		tok++;
 
 		ast_ptr rhs = expression(tok, last_err, assoc == LEFT_ASSOC ? prec+1 : prec);
 		if (!rhs) return nullptr;
@@ -207,18 +202,20 @@ inline ast_ptr expression (Token*& tok, std::string* last_err, int min_prec) {
 	return lhs;
 }
 
-inline bool parse_equation (Token*& tok, std::vector<Operation>& ops, std::string* last_err) {
+inline ast_ptr parse_equation (Token* tokens, std::string* last_err) {
+	Token* tok = tokens;
+
 	ast_ptr root = expression(tok, last_err);
-	if (!root) return false;
+	if (!root) return nullptr;
 	
 	if (tok->type == T_PAREN_CLOSE) {
 		*last_err = "syntax error, ')' without matching '('!";
-		return false;
+		return nullptr;
 	}
 	if (tok->type != T_EOI) {
 		*last_err = "syntax error, end of input expected!";
-		return false;
+		return nullptr;
 	}
 
-	return true;
+	return root;
 }

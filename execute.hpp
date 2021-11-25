@@ -239,7 +239,7 @@ bool execute_str (std::vector<Operation>& ops, std::string* result) {
 		std::string value;
 		switch (op.code) {
 			case OP_VALUE: {
-				value = (std::string)op.text;
+				value = prints("%g", op.value);
 			} break;
 
 			case OP_VARIABLE: {
