@@ -10,7 +10,7 @@ vs2fs vec2 vs_uv;
 #endif
 
 #ifdef _FRAGMENT
-	uniform float grid_size = 1;
+	uniform vec2 grid_size = vec2(1.0);
 	
 	uniform vec3 base_col = vec3(0.01, 0.01, 0.02);
 	
@@ -19,7 +19,7 @@ vs2fs vec2 vs_uv;
 		vec4 clip = vec4(vs_uv * 2.0 - 1.0, 0,1);
 		vec4 world = view.clip2world * clip;
 		
-		ivec2 xy = ivec2(floor(world / grid_size));
+		ivec2 xy = ivec2(floor(world.xy / grid_size));
 		
 		float fac  = ((xy.x ^ xy.y) & 1) == 0 ? 1.0 : 0.85;
 		

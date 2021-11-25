@@ -64,7 +64,7 @@ struct App : public IApp {
 	App () {}
 	virtual ~App () {}
 
-	Camera2D cam = Camera2D(0, 20.0f);
+	Camera2D cam = Camera2D(0, 10.0f);
 	Flycam flycam = Flycam(float3(0,-7,6), float3(0,-deg(30),0), 100);
 	bool cam_select = true;
 
@@ -101,7 +101,7 @@ struct App : public IApp {
 		ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 	}
 
-	void draw_background_grid () {
+	void draw_background_grid (View3D const& view) {
 		OGL_TRACE("background_grid");
 		ZoneScoped
 
@@ -111,6 +111,16 @@ struct App : public IApp {
 		s.depth_test = false;
 		s.blend_enable = false;
 		r.state.set(s);
+
+
+		float2 px2world = view.frust_near_size / view.viewport_size;
+
+		float2 step, minor_step;
+		step.x = tick_step(px2world.x, &minor_step.x);
+		step.y = tick_step(px2world.y, &minor_step.y);
+
+		grid_shad->set_uniform("grid_size", step);
+
 
 		glBindVertexArray(dummy_vao);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -129,7 +139,8 @@ struct App : public IApp {
 	}
 
 
-	float ticks_px = 3.0f;
+	float ticks_px = 5.0f;
+	float minor_ticks_px = 2.5f;
 
 	float eq_res_px = 1;
 
@@ -139,6 +150,24 @@ struct App : public IApp {
 
 	float4 eq_col = float4(0.95f,0.95f,0.95f,1);
 
+	float min_tick_dist_px = 80;
+
+	float tick_step (float px2world, float* minor_step) {
+		float units = min_tick_dist_px * px2world; // world units per <min_tick_dist_px>
+
+		float scale = powf(10.0f, ceil(log10f(units))); // rounded up to next ..., 0.1, 1, 10, 100, ...
+		float fract = units / scale; // remaining factor  0.3 -> scale=1 factor=0.3    25 -> scale=10 factor=2.5 etc.
+
+		float minor;
+		if      (fract <= 0.2f)   { fract = 0.2f; minor = 0.05f; }
+		else if (fract <= 0.5f)   { fract = 0.5f; minor = 0.1f; }
+		else  /* fract <= 1.0f */ { fract = 1.0f; minor = 0.2f; }
+
+		*minor_step = minor * scale;
+
+		return fract * scale;
+	}
+
 	void draw_axes (View3D const& view) {
 		ZoneScoped;
 
@@ -147,6 +176,10 @@ struct App : public IApp {
 		float2 ticks_text_padding = ticks_px * 1.5f;
 
 		float2 px2world = view.frust_near_size / view.viewport_size;
+		
+		float2 step, minor_step;
+		step.x = tick_step(px2world.x, &minor_step.x);
+		step.y = tick_step(px2world.y, &minor_step.y);
 
 		float2 view_size = view.frust_near_size * 0.5f;
 
@@ -180,25 +213,46 @@ struct App : public IApp {
 
 		draw_axis_tick_text(0, 0,0, float2(1,0), -1);
 
-		float2 tick_sz = px2world * ticks_px;
+		{ // draw tick marks
+			float2 tick_sz = px2world * ticks_px;
 
-		// draw X tick marks
-		int x_mark0 = floori(x0), x_mark1 = ceili(x1);
-		for (int x=x_mark0; x<=x_mark1; ++x) {
-			if (x==0) continue;
+			int x_mark0 = floori(x0/step.x), x_mark1 = ceili(x1/step.x);
+			for (int i=x_mark0; i<=x_mark1; ++i) {
+				if (i==0) continue;
+				float x = (float)i * step.x;
 
-			draw_axis_tick_text((float)x, (float)x, 0, float2(0.5f, 0), 0);
+				draw_axis_tick_text(x, x, 0, float2(0.5f, 0), 0);
 
-			lines.draw_line(float3((float)x, -tick_sz.y, 0), float3((float)x, +tick_sz.y, 0), colX);
+				lines.draw_line(float3(x, -tick_sz.y, 0), float3(x, +tick_sz.y, 0), colX);
+			}
+			int y_mark0 = floori(y0/step.y), y_mark1 = ceili(y1/step.y);
+			for (int i=y_mark0; i<=y_mark1; ++i) {
+				if (i==0) continue;
+				float y = (float)i * step.y;
+
+				draw_axis_tick_text(y, 0, y, float2(1, 0.5f), 1);
+
+				lines.draw_line(float3(-tick_sz.x, y, 0), float3(+tick_sz.x, y, 0), colY);
+			}
 		}
-		// draw Y tick marks
-		int y_mark0 = floori(y0), y_mark1 = ceili(y1);
-		for (int y=y_mark0; y<=y_mark1; ++y) {
-			if (y==0) continue;
 
-			draw_axis_tick_text((float)y, 0, (float)y, float2(1, 0.5f), 1);
+		{ // draw minor tick marks
+			float2 tick_sz = px2world * minor_ticks_px;
 
-			lines.draw_line(float3(-tick_sz.x, (float)y, 0), float3(+tick_sz.x, (float) y,0), colY);
+			int x_mark0 = floori(x0/minor_step.x), x_mark1 = ceili(x1/minor_step.x);
+			for (int i=x_mark0; i<=x_mark1; ++i) {
+				if (i==0) continue;
+				float x = (float)i * minor_step.x;
+
+				lines.draw_line(float3(x, -tick_sz.y, 0), float3(x, +tick_sz.y, 0), colX);
+			}
+			int y_mark0 = floori(y0/minor_step.y), y_mark1 = ceili(y1/minor_step.y);
+			for (int i=y_mark0; i<=y_mark1; ++i) {
+				if (i==0) continue;
+				float y = (float)i * minor_step.y;
+
+				lines.draw_line(float3(-tick_sz.x, y, 0), float3(+tick_sz.x, y, 0), colY);
+			}
 		}
 
 		r.text.draw_text("x", axis_label_text_px, colX, map_text(float3(x1, 0, 0), view), float2(1,1), ticks_text_padding);
@@ -254,7 +308,7 @@ struct App : public IApp {
 		glClearColor(0.05f, 0.06f, 0.07f, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		draw_background_grid();
+		draw_background_grid(view);
 
 		draw_axes(view);
 
