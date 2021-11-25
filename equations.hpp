@@ -77,10 +77,10 @@ struct Equations {
 	Equations () {
 		int coli = 0;
 
-		equations.emplace_back("sqrt(1-x^2)                      ", colors[coli++ % ARRLEN(colors)]);
-		equations.emplace_back("1/sqrt(x)                        ", colors[coli++ % ARRLEN(colors)]);
-		equations.emplace_back("0.5*x^3 +0.3*x^2 -1.2*x +2       ", colors[coli++ % ARRLEN(colors)]);
-		equations.emplace_back("sin(x)                           ", colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("sqrt(1-x^2)                      ", colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("1/sqrt(x)                        ", colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("0.5*x^3 +0.3*x^2 -1.2*x +2       ", colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("sin(x)                           ", colors[coli++ % ARRLEN(colors)]);
 
 		//equations.emplace_back("abs(x)*0.5",        colors[coli++ % ARRLEN(colors)]);
 		//equations.emplace_back("sqrt(x)",           colors[coli++ % ARRLEN(colors)]);
@@ -101,24 +101,24 @@ struct Equations {
 		//equations.emplace_back("(5*(x+3))",      colors[coli++ % ARRLEN(colors));
 		//equations.emplace_back("2-(5*(x+3)-6)",  colors[coli++ % ARRLEN(colors));
 
-		//equations.emplace_back("x",             colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("x+3",           colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("0.5*x",         colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("4+x-8",         colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("3+x/3",         colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("8/x+5",         colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("x+3*1*2",       colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("-5*x+0.2*x",    colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("x*x*x+x",       colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("x+x/x+3",       colors[coli++ % ARRLEN(colors));
+		equations.emplace_back("x",             colors[coli++ % ARRLEN(colors)]);
+		equations.emplace_back("x+3",           colors[coli++ % ARRLEN(colors)]);
+		equations.emplace_back("0.5*x",         colors[coli++ % ARRLEN(colors)]);
+		equations.emplace_back("4+x-8",         colors[coli++ % ARRLEN(colors)]);
+		equations.emplace_back("3+x/3",         colors[coli++ % ARRLEN(colors)]);
+		equations.emplace_back("8/x+5",         colors[coli++ % ARRLEN(colors)]);
+		equations.emplace_back("x+3*1*2",       colors[coli++ % ARRLEN(colors)]);
+		equations.emplace_back("-5*x+0.2*x",    colors[coli++ % ARRLEN(colors)]);
+		equations.emplace_back("x*x*x+x",       colors[coli++ % ARRLEN(colors)]);
+		equations.emplace_back("x+x/x+3",       colors[coli++ % ARRLEN(colors)]);
 
-		//equations.emplace_back("3",             colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("x",             colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("x * -0.5",      colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("2+1/x",         colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("1/(x-1)",       colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("2-1/(x-1)",     colors[coli++ % ARRLEN(colors));
-		//equations.emplace_back("sqrt(x)",       colors[coli++ % ARRLEN(colors));
+		//equations.emplace_back("3",             colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("x",             colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("x * -0.5",      colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("2+1/x",         colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("1/(x-1)",       colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("2-1/(x-1)",     colors[coli++ % ARRLEN(colors)]);
+		//equations.emplace_back("sqrt(x)",       colors[coli++ % ARRLEN(colors)]);
 	}
 
 	void drag_drop_equations (int src, int dst) {

@@ -1,6 +1,7 @@
 #pragma once
 #include "common.hpp"
 #include "tokenize.hpp"
+#include <stack>
 
 enum OPType {
 	OP_VALUE,        // push value
@@ -100,11 +101,24 @@ struct Operation {
 
 inline bool value_expression (Token*& tok, std::vector<Operation>& ops, std::string* last_err);
 
-inline bool recurse_subexpression (Token*& tok, std::vector<Operation>& ops, std::string* last_err, int precedence) {
+inline bool subexpression (Token*& tok, std::vector<Operation>& ops, std::string* last_err) {
+	
+	int precedence = MAX_PRECEDENCE;
+	std::stack<Token*> pending_ops;
+
+	if (!value_expression(tok, ops, last_err))
+		return false;
 
 	for (;;) {
-		if (tok->type == T_EOI || tok->type == T_PAREN_CLOSE || tok->type == T_COMMA)
+		if (tok->type == T_EOI || tok->type == T_PAREN_CLOSE || tok->type == T_COMMA) {
+			// pop all pending_ops
+			while (!pending_ops.empty()) {
+				if (pending_ops.top())
+					ops.push_back( Operation::binary_op(*pending_ops.top()) );
+				pending_ops.pop();
+			}
 			return true;
+		}
 
 		if (!is_binary_op(tok[0].type)) {
 			*last_err = "syntax error, binary operator expected!";
@@ -115,53 +129,50 @@ inline bool recurse_subexpression (Token*& tok, std::vector<Operation>& ops, std
 
 		if (op_prec > precedence) {
 			// operator has higher precedence than recursion level, return to handle operator there
-			return true;
-		} else if (op_prec < precedence) {
-			// right hand operator has lower precedence, recurse into next precedence level
-			if (!recurse_subexpression(tok, ops, last_err, precedence - 1))
-				return false;
-		} else {
-			// operator precedence matches recursion level, handle operand-operator pair here
+			precedence += 1;
 
-			auto& op = *tok++;
-
-			if (!value_expression(tok, ops, last_err))
-				return false;
-
-			auto& op2 = *tok;
-
-			if (is_binary_op(op2.type)) {
-				int recurse_precedence = -1;
-
-				int op2_prec = get_binary_op_precedence(op2.type);
-				if (op2_prec < precedence) {
-					// next operator has lower precedence than recursion level
-					recurse_precedence = precedence - 1;
-				} if (op2_prec == precedence && op.type == op2.type && get_binary_op_right_to_left(op2.type)) {
-					// next operator is the same as the current, but is a right-to-left operator
-					recurse_precedence = precedence;
-				}
-
-				if (recurse_precedence != -1) {
-					// recurse to let it insert it's ops before our operator op
-					if (!recurse_subexpression(tok, ops, last_err, precedence))
-						return false; // propagate error
-				}
-			}
-
-			ops.push_back( Operation::binary_op(op) );
+			// pop pending_ops
+			assert(!pending_ops.empty());
+			if (pending_ops.top())
+				ops.push_back( Operation::binary_op(*pending_ops.top()) );
+			pending_ops.pop();
+			continue;
 		}
+		if (op_prec < precedence) {
+			// right hand operator has lower precedence, recurse into next precedence level
+			precedence -= 1;
+
+			// push pending_ops
+			pending_ops.push(nullptr);
+			continue;
+		}
+		
+		// operator precedence matches recursion level, handle operand-operator pair here
+
+		auto& op = *tok++;
+
+		if (!value_expression(tok, ops, last_err))
+			return false;
+
+		auto& op2 = *tok;
+
+		if (is_binary_op(op2.type)) {
+			int op2_prec = get_binary_op_precedence(op2.type);
+			if (op2_prec < precedence) {
+				// next operator has lower precedence than recursion level
+				precedence -= 1;
+				pending_ops.push(&op);
+				continue;
+			} if (op2_prec == precedence && op.type == op2.type && get_binary_op_right_to_left(op2.type)) {
+				// next operator is the same as the current, but is a right-to-left operator
+				// precedence stays the same
+				pending_ops.push(&op);
+				continue;
+			}
+		}
+
+		ops.push_back( Operation::binary_op(op) );
 	}
-}
-
-inline bool subexpression (Token*& tok, std::vector<Operation>& ops, std::string* last_err) {
-	if (!value_expression(tok, ops, last_err))
-		return false;
-
-	if (!recurse_subexpression(tok, ops, last_err, MAX_PRECEDENCE))
-		return false;
-
-	return true;
 }
 
 // [-/+] ([value_expression] [recurse_subexpression])  ex. -(-5.0 + x^3)
