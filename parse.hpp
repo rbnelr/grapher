@@ -92,6 +92,17 @@ inline ast_ptr ast_node (OPType opcode, Token& tok_for_text) {
 	return node;
 }
 
+inline bool lookup_constant (std::string_view const& name, float* out) {
+	static constexpr float PHI = 1.61803398874989484820f; // golden ratio
+
+	if      (name == "pi")  *out = PI;
+	else if (name == "tau") *out = TAU;
+	else if (name == "e")   *out = EULER;
+	else if (name == "phi") *out = PHI;
+	else                    return false;
+	return true;
+}
+
 // Recursive decent parsing with precedence climbing
 // with a little help from https://eli.thegreenplace.net/2012/08/02/parsing-expressions-by-precedence-climbing
 
@@ -148,14 +159,26 @@ inline ast_ptr atom (Token*& tok, std::string* last_err) {
 	}
 	else {
 		OPType type;
-		if      (tok->type == T_LITERAL   ) type = OP_VALUE;
-		else if (tok->type == T_IDENTIFIER) type = OP_VARIABLE;
+		float value = 0;
+
+		if      (tok->type == T_LITERAL   ) {
+			type = OP_VALUE;
+			value = tok->value;
+		}
+		else if (tok->type == T_IDENTIFIER) {
+			if (lookup_constant((std::string_view)*tok, &value)) {
+				type = OP_VALUE;
+			} else {
+				type = OP_VARIABLE;
+			}
+		}
 		else {
 			*last_err = "syntax error, number or variable expected!";
 			return nullptr;
 		}
+
 		result = ast_node(type, *tok);
-		result->op.value = tok->value;
+		result->op.value = value;
 
 		tok++;
 	}

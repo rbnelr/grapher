@@ -11,11 +11,9 @@ float mypow (float a, float b) {
 }
 float mymod (float a, float b) {
 	float val = fmodf(a, b);
-	//if (b > 0.0f) {
-	//	if (a < 0.0f) val += b;
-	//} else {
-	//	if (a > 0.0f) val += b;
-	//}
+	//if (b > 0.0f) if (a < 0.0f) val += b;
+	//else          if (a > 0.0f) val += b;
+	//
 	if (a*b < 0.0f) // differing sign
 		val += b;
 	return val;
@@ -24,7 +22,7 @@ float mymod (float a, float b) {
 struct Variables {
 	float x;
 
-	float lookup (std::string_view const& name, float* out) {
+	bool lookup (std::string_view const& name, float* out) {
 		if (name == "x") {
 			*out = x;
 			return true;

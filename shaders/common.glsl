@@ -60,6 +60,7 @@ struct View3D {
 	
 	// viewport size (pixels)
 	vec2        viewport_size;
+	vec2        inv_viewport_size;
 };
 
 // layout(std140, binding = 0) only in #version 420
