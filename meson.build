@@ -33,7 +33,7 @@ if comp != 'msvc'
 	if opt != '0'
 		args += [
 			'-msse2',
-			'-ffast-math',
+			#'-ffast-math', does not allow use of NaNs and Infs, which I commonly use
 			'-fno-math-errno',
 			
 			'-fwhole-program',

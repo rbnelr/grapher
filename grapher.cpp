@@ -582,7 +582,7 @@ struct App : public IApp {
 			if (I.buttons[MOUSE_BUTTON_LEFT].went_down)
 				clicked_eq = nearest_eq;
 		}
-		if (I.buttons[MOUSE_BUTTON_LEFT].went_up)
+		if (!I.buttons[MOUSE_BUTTON_LEFT].is_down)
 			clicked_eq = -1;
 	}
 

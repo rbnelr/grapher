@@ -232,7 +232,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\common;$(SolutionDir)..\..\..\common\dear_imgui_custom;$(SolutionDir)..\..\..\common\dear_imgui;$(SolutionDir)..\..\..\common\glad;$(SolutionDir)..\..\..\common\glfw-3.3.5\include;$(SolutionDir)..\..\..\common\tracy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <FloatingPointModel>Fast</FloatingPointModel>
+      <FloatingPointModel>Precise</FloatingPointModel>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <ShowIncludes>false</ShowIncludes>
@@ -256,7 +256,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\common;$(SolutionDir)..\..\..\common\dear_imgui_custom;$(SolutionDir)..\..\..\common\dear_imgui;$(SolutionDir)..\..\..\common\glad;$(SolutionDir)..\..\..\common\glfw-3.3.5\include;$(SolutionDir)..\..\..\common\tracy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <FloatingPointModel>Fast</FloatingPointModel>
+      <FloatingPointModel>Precise</FloatingPointModel>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -285,7 +285,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\common;$(SolutionDir)..\..\..\common\dear_imgui_custom;$(SolutionDir)..\..\..\common\dear_imgui;$(SolutionDir)..\..\..\common\glad;$(SolutionDir)..\..\..\common\glfw-3.3.5\include;$(SolutionDir)..\..\..\common\tracy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <FloatingPointModel>Fast</FloatingPointModel>
+      <FloatingPointModel>Precise</FloatingPointModel>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -314,7 +314,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\common;$(SolutionDir)..\..\..\common\dear_imgui_custom;$(SolutionDir)..\..\..\common\dear_imgui;$(SolutionDir)..\..\..\common\glad;$(SolutionDir)..\..\..\common\glfw-3.3.5\include;$(SolutionDir)..\..\..\common\tracy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <FloatingPointModel>Fast</FloatingPointModel>
+      <FloatingPointModel>Precise</FloatingPointModel>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
