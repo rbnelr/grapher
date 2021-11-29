@@ -113,10 +113,6 @@ inline ast_ptr expression (Token*& tok, std::string* last_err, int min_prec = 0)
 // or a function call                 ex. abs(x+3)
 // any of these can be preceded by a unary minus  -5.3 or -x
 inline ast_ptr atom (Token*& tok, std::string* last_err) {
-	ast_ptr unary_minus = nullptr;
-	if      (tok->type == T_MINUS) unary_minus = ast_node(OP_UNARY_NEGATE, *tok++);
-	else if (tok->type == T_PLUS ) tok++; // skip, since unary plus is no-op
-
 	ast_ptr result;
 	if (tok->type == T_PAREN_OPEN) {
 		tok++;
@@ -182,11 +178,6 @@ inline ast_ptr atom (Token*& tok, std::string* last_err) {
 
 		tok++;
 	}
-
-	if (unary_minus) {
-		unary_minus->child = std::move(result);
-		return unary_minus;
-	}
 	return result;
 }
 
@@ -195,6 +186,11 @@ inline ast_ptr atom (Token*& tok, std::string* last_err) {
 // note that the (y+3) is an atom, which happens to be a sub-expression
 // expression calls itself recursively with increasing min_precedences to generate operators in the correct order (precedence climbing algorithm)
 inline ast_ptr expression (Token*& tok, std::string* last_err, int min_prec) {
+
+	ast_ptr unary_minus = nullptr;
+	if      (tok->type == T_MINUS) unary_minus = ast_node(OP_UNARY_NEGATE, *tok++);
+	else if (tok->type == T_PLUS ) tok++; // skip, since unary plus is no-op
+	int unary_prec = 0;
 
 	ast_ptr lhs = atom(tok, last_err);
 	if (!lhs) return nullptr;
@@ -209,6 +205,11 @@ inline ast_ptr expression (Token*& tok, std::string* last_err, int min_prec) {
 		if (prec < min_prec)
 			break;
 
+		if (unary_minus && unary_prec >= prec) {
+			unary_minus->child = std::move(lhs);
+			lhs = std::move(unary_minus);
+		}
+
 		auto op_type = (OPType)(tok->type + (OP_ADD-T_PLUS));
 		ast_ptr op = ast_node(op_type, *tok);
 		tok++;
@@ -222,6 +223,10 @@ inline ast_ptr expression (Token*& tok, std::string* last_err, int min_prec) {
 		lhs = std::move(op);
 	}
 
+	if (unary_minus) {
+		unary_minus->child = std::move(lhs);
+		return unary_minus;
+	}
 	return lhs;
 }
 

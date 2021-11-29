@@ -105,20 +105,20 @@ struct Equations {
 		//add_equation("abs(-x)" );
 		//add_equation("max(x, -x)");
 
-		//add_equation("-x+2");
-		//add_equation("-x*2");
-		//add_equation("-x^2");
-		//
-		//add_equation("-x+-2");
-		//add_equation("-x*-2");
-		//add_equation("-x^-2");
+		add_equation("-x+2");
+		add_equation("-x*2");
+		add_equation("-x^2");
+		
+		add_equation("-x+-2");
+		add_equation("-x*-2");
+		add_equation("-x^-2");
 
 		//add_equation("5^x");
-		add_equation("10^x");
-		add_equation("pi^x");
-		add_equation("clamp(x/3, 0,1)");
-		add_equation("sin(x)");
-		add_equation("acos(x)");
+		//add_equation("10^x");
+		//add_equation("pi^x");
+		//add_equation("clamp(x/3, 0,1)");
+		//add_equation("sin(x)");
+		//add_equation("acos(x)");
 		//add_equation("1.3^sqrt(abs(x^2 + 5*x)) - 1");
 		//add_equation("x^4 + x^3 + x^2");
 		//
