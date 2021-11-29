@@ -51,8 +51,8 @@ struct Equation {
 		exec_valid = true;
 	}
 
-	bool evaluate (Variables& vars, float x, float* result) {
-		exec_valid = execute(vars, ops, result, &last_err);
+	bool evaluate (ExecState& state, float x, float* result) {
+		exec_valid = execute(state, ops, result, &last_err);
 		return exec_valid;
 	}
 
@@ -116,6 +116,9 @@ struct Equations {
 		//add_equation("5^x");
 		add_equation("10^x");
 		add_equation("pi^x");
+		add_equation("clamp(x/3, 0,1)");
+		add_equation("sin(x)");
+		add_equation("acos(x)");
 		//add_equation("1.3^sqrt(abs(x^2 + 5*x)) - 1");
 		//add_equation("x^4 + x^3 + x^2");
 		//

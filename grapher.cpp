@@ -6,14 +6,213 @@ struct AxisUnits {
 	char const* name;
 	std::string unit_str;
 	float scale;
-	bool stretch;
-	bool log;
+	bool log = false;
+	bool deg = false;
+	float stretch = 1;
 };
 inline AxisUnits std_unit_modes[] = {
-	{ "1"      , ""   , 1,          false },
-	{ "Log"    , ""   , 1,           true },
-	{ "Deg"    , "deg", RAD_TO_DEG, false }, // TODO: proper degrees mode needs trig special degree trig functions 
-	{ "Pi"     , "pi" , PI,         false },
+	{ "1"      , ""   , 1 },
+	{ "Deg"    , "°"  , 1,  false,  true, RAD_TO_DEG },
+	{ "Pi"     , "π"  , PI },
+	{ "%"      , "%"  , 0.01f },
+	{ "Log10"  , ""   , 1,   true, false },
+};
+
+struct Subtick {
+	float offs;
+	float size; // > 0.75f gets text label
+};
+
+struct Axis {
+	std::string name;
+	float4      col;
+
+	const char* display_name;
+
+	AxisUnits   custom_unit = { "Custom" , "", 1, false };
+
+	AxisUnits*  units = &std_unit_modes[0];
+
+	//bool        base_2 = false;
+
+	void imgui (const char* axis) {
+		int std_count = ARRLEN(std_unit_modes);
+
+		ImGui::PushID(axis);
+		ImGui::PushItemWidth(70);
+
+		ImGui::Text(axis);
+
+		ImGui::SameLine();
+		ImGui::ColorEdit3("###col", &col.x, ImGuiColorEditFlags_NoInputs);
+
+		ImGui::SameLine();
+		ImGui::InputText("###name", &name);
+
+		display_name = name.empty() ? axis : name.c_str();
+
+		for (int i=0; i<std_count; ++i) {
+			ImGui::SameLine();
+			if (ImGui::RadioButton(std_unit_modes[i].name, units == &std_unit_modes[i]))
+				units = &std_unit_modes[i];
+		}
+		ImGui::SameLine();
+		if (ImGui::RadioButton(custom_unit.name, units == &custom_unit))
+			units = &custom_unit;
+
+		if (units == &custom_unit && ImGui::TreeNodeEx("Custom Unit", ImGuiTreeNodeFlags_DefaultOpen)) {
+
+			ImGui::InputFloat("Scale", &custom_unit.scale, 0,0, "%g");
+			ImGui::InputText("Unit Text", &custom_unit.unit_str);
+			ImGui::Checkbox("Log10", &custom_unit.log);
+
+			ImGui::TreePop();
+		}
+
+		//ImGui::Checkbox("base_2", &base_2);
+
+		ImGui::PopItemWidth();
+		ImGui::PopID();
+	}
+
+	float       tick_step;
+	Subtick     subticks[16];
+	int         subtick_count;
+
+	float min_tick_dist_px = 80;
+
+	void get_tick_step (float px2world) {
+		subtick_count = 0;
+
+		auto add_subtick = [&] (float offs, float size) {
+			assert(subtick_count < ARRLEN(subticks));
+			subticks[subtick_count++] = { offs, size };
+		};
+		add_subtick(0, 1); // add base tick, rest are "subticks"
+
+		float min_units = min_tick_dist_px * px2world; // world units per <min_tick_dist_px>
+
+		if (units->log) {
+			float log_spacing = 0.33f;
+			//static float log_spacing = 0.33f;
+			//ImGui::SliderFloat("log_spacing", &log_spacing, 0, 1);
+
+			if (min_units >= 1.00f) {
+				min_units = max(min_units * log_spacing, 1.0f);
+
+				// base-2 scaling for large log scales
+				// (every 2nd tick mark disappears when zooming out)
+				tick_step = powf(2.0f, ceil(log2f(min_units)));
+
+				// show smaller tick marks for int powers of 10
+				if (tick_step >= 4.0f) {
+					add_subtick( 0.25f, 0.50f );
+					add_subtick( 0.50f, 0.75f );
+					add_subtick( 0.75f, 0.50f );
+				}
+				else if (tick_step >= 2.0f) {
+					add_subtick( 0.50f, 0.75f );
+				}
+			} else {
+				// integer multiples of log-space values are integer exponents in normal space
+				// at small scale, ie. fractional log-space values usually don't map to nice normal space values
+				// ex. while 2   in log-space is 100 in normal space
+				//           0.5 in log-space is sqrt(10) = 3.1622
+				// so instead use explicit places for ticks up to a certain zoom level
+				// above that level I'm clueless as to how to place ticks procedurally and have them be nice number
+
+				tick_step = 1.0f;
+
+				if (min_units >= 0.50f) {
+					add_subtick( log10f(0.25f), 1.00f );
+					add_subtick( log10f(0.50f), 1.00f );
+					add_subtick( log10f(0.75f), 0.75f );
+				}
+				else if (min_units >= 0.25f) {
+					add_subtick( log10f(0.2f), 1.00f );
+					add_subtick( log10f(0.3f), 0.75f );
+					add_subtick( log10f(0.4f), 0.75f );
+					add_subtick( log10f(0.5f), 1.00f );
+					add_subtick( log10f(0.6f), 0.75f );
+					add_subtick( log10f(0.7f), 0.75f );
+					add_subtick( log10f(0.8f), 0.75f );
+					add_subtick( log10f(0.9f), 0.75f );
+				}
+				else {
+					add_subtick( log10f(0.2f), 1.00f );
+					add_subtick( log10f(0.3f), 1.00f );
+					add_subtick( log10f(0.4f), 1.00f );
+					add_subtick( log10f(0.5f), 1.00f );
+					add_subtick( log10f(0.6f), 1.00f );
+					add_subtick( log10f(0.7f), 1.00f );
+					add_subtick( log10f(0.8f), 1.00f );
+					add_subtick( log10f(0.9f), 1.00f );
+				}
+			}
+		}
+		else if (units->deg && min_units >= 10.0f) {
+
+			if (min_units > 90.0f) {
+				min_units = max(min_units / 180.0f, 1.0f);
+				tick_step = powf(2.0f, ceil(log2f(min_units))) * 180.0f;
+
+				add_subtick( 0.25f, 0.50f );
+				add_subtick( 0.50f, 0.75f );
+				add_subtick( 0.75f, 0.50f );
+			}
+			else if (min_units > 45.0f) {
+				tick_step = 90.0f;
+				add_subtick( 15 / 90.0f, 0.50f );
+				add_subtick( 30 / 90.0f, 0.50f );
+				add_subtick( 45 / 90.0f, 0.75f );
+				add_subtick( 60 / 90.0f, 0.50f );
+				add_subtick( 75 / 90.0f, 0.50f );
+			}
+			else if (min_units > 20.0f) {
+				tick_step = 45.0f;
+
+				add_subtick( 15 / 45.0f, 0.75f );
+				add_subtick( 30 / 45.0f, 0.75f );
+			}
+			else {
+				tick_step = 15.0f;
+
+				add_subtick(  5 / 15.0f, 0.75f );
+				add_subtick( 10 / 15.0f, 0.75f );
+			}
+		}
+		else {
+			min_units /= units->scale;
+
+			float scale = powf(10.0f, ceil(log10f(min_units))); // rounded up to next ..., 0.1, 1, 10, 100, ...
+			float fract = min_units / scale; // remaining factor  0.3 -> scale=1 factor=0.3    25 -> scale=10 factor=2.5 etc.
+
+			if      (fract <= 0.2f)   {
+				fract = 0.2f;
+
+				add_subtick( 0.05f / fract, 0.50f );
+				add_subtick( 0.10f / fract, 0.75f );
+				add_subtick( 0.15f / fract, 0.50f );
+			}
+			else if (fract <= 0.5f)   {
+				fract = 0.5f;
+
+				add_subtick( 0.10f / fract, 0.50f );
+				add_subtick( 0.20f / fract, 0.50f );
+				add_subtick( 0.30f / fract, 0.50f );
+				add_subtick( 0.40f / fract, 0.50f );
+			}
+			else {
+				fract = 1.0f; 
+
+				add_subtick( 0.25f / fract, 0.50f );
+				add_subtick( 0.50f / fract, 0.75f );
+				add_subtick( 0.75f / fract, 0.50f );
+			}
+
+			tick_step = fract * scale * units->scale;
+		}
+	}
 };
 
 struct App : public IApp {
@@ -28,6 +227,13 @@ struct App : public IApp {
 	Flycam flycam = Flycam(float3(0,-7,6), float3(0,-deg(30),0), 100);
 
 	ogl::Renderer r;
+
+	TextRenderer text = TextRenderer("fonts/DroidSerif-WmoY.ttf", 64, true,
+		"°∞" // π°∞
+		"αβγδεζηθικλμνξοπρστυφχψω" // greek letters
+		"ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ"
+	);
+
 	LineRenderer lines;
 
 	LineRenderer::DrawCall              axis_lines;
@@ -42,173 +248,25 @@ struct App : public IApp {
 
 	float axis_line_w = 1.49f; // round to 1 for not-AA
 	bool axis_line_aa = true;
-
-	struct Axis {
-		std::string name;
-		float4      col;
-
-		AxisUnits   custom_unit = { "Custom" , "", 1, false };
-
-		int         sel_unit = 0;
-
-		const char* display_name;
-		AxisUnits*  units;
-
-		//bool        base_2 = false;
-
-		void imgui (const char* axis) {
-			int std_count = ARRLEN(std_unit_modes);
-
-			ImGui::PushID(axis);
-			ImGui::PushItemWidth(70);
-
-			ImGui::Text(axis);
-
-			ImGui::SameLine();
-			ImGui::ColorEdit3("###col", &col.x, ImGuiColorEditFlags_NoInputs);
-
-			ImGui::SameLine();
-			ImGui::InputText("###name", &name);
-
-			display_name = name.empty() ? axis : name.c_str();
-
-			for (int i=0; i<std_count; ++i) {
-				ImGui::SameLine();
-				ImGui::RadioButton(std_unit_modes[i].name, &sel_unit, i);
-			}
-			ImGui::SameLine();
-			ImGui::RadioButton(custom_unit.name, &sel_unit, std_count);
-
-			if (sel_unit == std_count) {
-				ImGui::SameLine();
-				ImGui::InputFloat("###scale", &custom_unit.scale, 0,0, "%g");
-			}
-
-			//ImGui::Checkbox("base_2", &base_2);
-
-			units = sel_unit < std_count ? &std_unit_modes[sel_unit] : &custom_unit;
-
-			ImGui::PopItemWidth();
-			ImGui::PopID();
-		}
-
-	};
+	
 	Axis axes[2] = {
 		{ "", float4(1.0f,0.1f,0.1f,1) },
 		{ "", float4(0.1f,1.0f,0.1f,1) },
 	};
-
-	float min_tick_dist_px = 80;
-
-	struct AxisTick {
-		float offs;
-		float size; // > 0.75f gets text label
-	};
-	typedef std::array<AxisTick, 21> AxisTicks;
-
-	float get_tick_step (Axis& a, float px2world, AxisTicks& ticks) {
-		ticks.fill({});
-
-		float units = min_tick_dist_px * px2world; // world units per <min_tick_dist_px>
-
-		units /= a.units->scale;
-		
-		if (a.units->log) {
-			units *= 0.75f; // use smaller spacing because log space can be confusing, so want more number labels
-
-			float scale = powf(2.0f, ceil(log2f(units)));
-			
-			if (scale >= 1.0f) {
-				return scale;
-			} else {
-
-				if (scale >= 0.5f) {
-					ticks[0] = { log10f(0.2f), 0.75f };
-					ticks[1] = { log10f(0.3f), 0.75f };
-					ticks[2] = { log10f(0.4f), 0.75f };
-					ticks[3] = { log10f(0.5f), 1.00f };
-					ticks[4] = { log10f(0.6f), 0.75f };
-					ticks[5] = { log10f(0.7f), 0.75f };
-					ticks[6] = { log10f(0.8f), 0.75f };
-					ticks[7] = { log10f(0.9f), 0.75f };
-				} else if (scale >= 0.25f) {
-					ticks[0] = { log10f(0.2f), 1.00f };
-					ticks[1] = { log10f(0.3f), 0.75f };
-					ticks[2] = { log10f(0.4f), 0.75f };
-					ticks[3] = { log10f(0.5f), 1.00f };
-					ticks[4] = { log10f(0.6f), 0.75f };
-					ticks[5] = { log10f(0.7f), 0.75f };
-					ticks[6] = { log10f(0.8f), 0.75f };
-					ticks[7] = { log10f(0.9f), 0.75f };
-				} else {
-					ticks[0] = { log10f(0.2f), 1.00f };
-					ticks[1] = { log10f(0.3f), 1.00f };
-					ticks[2] = { log10f(0.4f), 1.00f };
-					ticks[3] = { log10f(0.5f), 1.00f };
-					ticks[4] = { log10f(0.6f), 1.00f };
-					ticks[5] = { log10f(0.7f), 1.00f };
-					ticks[6] = { log10f(0.8f), 1.00f };
-					ticks[7] = { log10f(0.9f), 1.00f };
-				}
-
-				return 1.0f;
-			}
-
-		} else {
-			//if (a.base_2) {
-			//	float scale = powf(2.0f, ceil(log2f(units)));
-			//	
-			//	ticks[0] = { 0.25f, 0.50f };
-			//	ticks[1] = { 0.50f, 0.75f };
-			//	ticks[2] = { 0.75f, 0.50f };
-			//
-			//	return scale * a.units->scale;
-			//}
-			//else {
-				float scale = powf(10.0f, ceil(log10f(units))); // rounded up to next ..., 0.1, 1, 10, 100, ...
-				float fract = units / scale; // remaining factor  0.3 -> scale=1 factor=0.3    25 -> scale=10 factor=2.5 etc.
-
-				if      (fract <= 0.2f)   {
-					fract = 0.2f;
-
-					ticks[0] = { 0.05f / fract, 0.50f };
-					ticks[1] = { 0.10f / fract, 0.75f };
-					ticks[2] = { 0.15f / fract, 0.50f };
-				}
-				else if (fract <= 0.5f)   {
-					fract = 0.5f;
-
-					ticks[0] = { 0.10f / fract, 0.50f };
-					ticks[1] = { 0.20f / fract, 0.50f };
-					ticks[2] = { 0.30f / fract, 0.50f };
-					ticks[3] = { 0.40f / fract, 0.50f };
-				}
-				else  /* fract <= 1.0f */ {
-					fract = 1.0f; 
-					
-					ticks[0] = { 0.25f / fract, 0.50f };
-					ticks[1] = { 0.50f / fract, 0.75f };
-					ticks[2] = { 0.75f / fract, 0.50f };
-				}
-
-				return fract * scale * a.units->scale;
-			//}
-		}
-	}
-
+	
 	void imgui (Input& I) {
 		ZoneScoped
 
 		r.debug_draw.imgui();
-		r.text.imgui();
+		text.imgui();
 
 		ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
 		ImGui::Checkbox("3D", &mode_3d);
 
 		ImGui::Spacing();
-		axes[0].imgui("X");
-		axes[1].imgui("Y");
+		axes[0].imgui("x");
+		axes[1].imgui("y");
 		ImGui::Spacing();
 
 		if (ImGui::TreeNode("Graphics")) {
@@ -245,7 +303,7 @@ struct App : public IApp {
 
 	float eq_res_px = 1;
 
-	float ticks_px = 5.0f;
+	float ticks_px = 7.0f;
 
 	float4 col_ticks_text = float4(0.8f,0.8f,0.8f,1);
 
@@ -253,44 +311,43 @@ struct App : public IApp {
 
 	// 
 	float2 px2world;
-	float2 tick_step;
 
-	AxisTicks ticks_x;
-	AxisTicks ticks_y;
+	float2 view0, view1;
 
-	float x0, x1, y0, y1;
+	View3D update_2d_view (Input& I, float2 const& viewport_size) {
 
-	void adjust_matrices (View3D& view) {
-		//static float2 stretch = 1;
+		auto view = cam.update(I, viewport_size);
+
+		float2 scale_fac;
+		scale_fac.x = axes[0].units->stretch;
+		scale_fac.y = axes[1].units->stretch;
+
+		{ // 
+			float4x4 stretch2world = (float4x4)scale(float3(1.0f/scale_fac, 1));
+			float4x4 world2stretch = (float4x4)scale(float3(scale_fac, 1));
+
+			view.world2cam = view.world2cam * stretch2world;
+			view.cam2world = world2stretch * view.cam2world;
+
+			view.world2clip = view.world2clip * stretch2world;
+			view.clip2world = world2stretch * view.clip2world;
+
+			view.frust_near_size *= scale_fac;
+			view.cam_pos *= float3(scale_fac, 1);
+		}
+
 		//
-		//ImGui::DragFloat("stretch x", &stretch.x, 0.05f);
-		//ImGui::DragFloat("stretch y", &stretch.y, 0.05f);
-		//
-		//float4x4 stretch2world = (float4x4)scale(float3(1.0f/stretch, 1));
-		//float4x4 world2stretch = (float4x4)scale(float3(stretch, 1));
-		//
-		//view.world2cam = view.world2cam * stretch2world;
-		//view.cam2world = world2stretch * view.cam2world;
-		//
-		//view.world2clip = view.world2clip * stretch2world;
-		//view.clip2world = world2stretch * view.clip2world;
-		//
-		//view.frust_near_size *= stretch;
-		//view.cam_pos *= float3(stretch, 1);
-	}
-	void precompute (View3D const& view) {
 		px2world = view.frust_near_size / view.viewport_size;
 
-		tick_step.x = get_tick_step(axes[0], px2world.x, ticks_x);
-		tick_step.y = get_tick_step(axes[1], px2world.y, ticks_y);
+		axes[0].get_tick_step(px2world.x);
+		axes[1].get_tick_step(px2world.y);
 		
 		float2 view_size = view.frust_near_size * 0.5f;
 
-		x0 = view.cam_pos.x - view_size.x;
-		x1 = view.cam_pos.x + view_size.x;
+		view0 = (float2)view.cam_pos - view_size;
+		view1 = (float2)view.cam_pos + view_size;
 
-		y0 = view.cam_pos.y - view_size.y;
-		y1 = view.cam_pos.y + view_size.y;
+		return view;
 	}
 
 	void draw_background_grid (View3D const& view) {
@@ -304,7 +361,7 @@ struct App : public IApp {
 		s.blend_enable = false;
 		r.state.set(s);
 
-		grid_shad->set_uniform("grid_size", tick_step);
+		grid_shad->set_uniform("grid_size", float2(axes[0].tick_step, axes[1].tick_step));
 
 		glBindVertexArray(dummy_vao);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -318,22 +375,24 @@ struct App : public IApp {
 
 		{ // draw axes lines
 			float2 line_pad = px2world * 10;
-
-			line_vc += lines.draw_line(float3(x0-line_pad.x, 0,0), float3(x1+line_pad.x, 0,0), axes[0].col);
-			line_vc += lines.draw_line(float3( 0,y0-line_pad.y,0), float3( 0,y1+line_pad.y,0), axes[1].col);
-		}
 		
+			line_vc += lines.draw_line(float3(view0.x-line_pad.x, 0,0), float3(view1.x+line_pad.x, 0,0), axes[0].col);
+			line_vc += lines.draw_line(float3( 0,view0.y-line_pad.y,0), float3( 0,view1.y+line_pad.y,0), axes[1].col);
+		}
+
 		float ticks_text_px = text_size * 0.66f;
 		float axis_label_text_px = text_size * 1.25f;
 		float2 ticks_text_padding = ticks_px * 1.5f;
 
-		auto draw_axis_tick_text = [&] (View3D const& view, float val, float unit_scale, float x, float y, float2 const& align, int axis, const char* unit) {
-			val = val * unit_scale;
-			if (axes[1].units->log)
+		auto draw_axis_tick_text = [&] (
+				View3D const& view, float val, float unit_scale, float x, float y, float2 const& align,
+				int axis=-1, const char* unit="", bool log=false) {
+			val *= unit_scale;
+			if (log)
 				val = powf(10.0f, val);
 
 			auto str = prints("%g%s", val, unit);
-			auto ptext = r.text.prepare_text(str, ticks_text_px, col_ticks_text);
+			auto ptext = text.prepare_text(str, ticks_text_px, col_ticks_text);
 
 			float2 pos_px = map_text(float3(x, y, 0), view);
 
@@ -343,76 +402,75 @@ struct App : public IApp {
 			if      (axis == 1) offset.x = clamp(offset.x, ticks_text_padding.x, view.viewport_size.x - ptext.bounds.x - ticks_text_padding.x);
 			else if (axis == 0) offset.y = clamp(offset.y, ticks_text_padding.y, view.viewport_size.y - ptext.bounds.y - ticks_text_padding.y);
 
-			r.text.offset_glyphs(ptext.idx, ptext.len, offset);
+			text.offset_glyphs(ptext.idx, ptext.len, offset);
 		};
 
-		draw_axis_tick_text(view, 0, 1, 0,0, float2(1,0), -1, "");
+		draw_axis_tick_text(view, 0, 1, 0,0, float2(1,0));
 
-		{ // draw tick marks
-			float2 tick_sz = ticks_px * px2world;
+		float2 tick_sz = ticks_px * px2world;
 
-			const char* unit_str_x = axes[0].units->unit_str.c_str();
-			const char* unit_str_y = axes[1].units->unit_str.c_str();
+		{ // X
+			auto& axis = axes[0];
+			
+			{ // draw tick marks
+				const char* unit_str = axis.units->unit_str.c_str();
 
-			// unit_str=""   with scale=1    -> 0  1  2  3  4  5  6  7    
-			// unit_str="pi" with scale=3.14 -> 0pi       1pi       2pi   
-			// unit_str=""   with scale=3.14 -> 0         3.14      6.28  
-			float text_unit_scale_x = axes[0].units->unit_str.empty() ? 1.0f : 1.0f / axes[0].units->scale;
-			float text_unit_scale_y = axes[1].units->unit_str.empty() ? 1.0f : 1.0f / axes[1].units->scale;
+				// unit_str=""   with scale=1    -> 0  1  2  3  4  5  6  7    
+				// unit_str="pi" with scale=3.14 -> 0pi       1pi       2pi   
+				// unit_str=""   with scale=3.14 -> 0         3.14      6.28  
+				float text_unit_scale = axis.units->unit_str.empty() ? 1.0f : 1.0f / axis.units->scale;
 
-			{ // X
-				int start = floori(x0/tick_step.x);
-				int   end =  ceili(x1/tick_step.x);
+				int start = floori(view0.x / axis.tick_step);
+				int   end =  ceili(view1.x / axis.tick_step);
+
 				for (int i=start; i<=end; ++i) {
-					float x = (float)i * tick_step.x;
+					for (int j=0; j<axis.subtick_count; ++j) {
+						float coord = ((float)i + axis.subticks[j].offs) * axis.tick_step;
+						if (coord == 0.0f) continue;
 
-					if (i!=0) {
-						draw_axis_tick_text(view, x, text_unit_scale_x, x, 0, float2(0.5f, 0), 1, unit_str_x);
+						if (axis.subticks[j].size >= 1.0f)
+							draw_axis_tick_text(view, coord, text_unit_scale, coord, 0, float2(0.5f, 0), 0, unit_str, axis.units->log);
 
-						line_vc += lines.draw_line(float3(x, -tick_sz.y, 0), float3(x, +tick_sz.y, 0), axes[0].col);
-					}
-
-					for (int j = 0; j < (int)ticks_x.size() && ticks_x[j].offs != 0; ++j) {
-						float xm = x + ticks_x[j].offs * tick_step.x;
-
-						if (ticks_x[j].size >= 1.0f)
-							draw_axis_tick_text(view, xm, text_unit_scale_x, xm, 0, float2(0.5f, 0), 1, unit_str_x);
-
-						float sz = tick_sz.y * ticks_x[j].size * 0.8f;
-						line_vc += lines.draw_line(float3(xm, -sz, 0), float3(xm, +sz, 0), axes[0].col);
+						float sz = tick_sz.y * axis.subticks[j].size * 0.8f;
+						line_vc += lines.draw_line(float3(coord, -sz, 0), float3(coord, +sz, 0), axis.col);
 					}
 				}
 			}
+		}
+		{ // Y
+			auto& axis = axes[1];
 
-			{ // Y
-				int start = floori(y0/tick_step.y);
-				int   end =  ceili(y1/tick_step.y);
+			{ // draw tick marks
+				const char* unit_str = axis.units->unit_str.c_str();
+
+				// unit_str=""   with scale=1    -> 0  1  2  3  4  5  6  7    
+				// unit_str="pi" with scale=3.14 -> 0pi       1pi       2pi   
+				// unit_str=""   with scale=3.14 -> 0         3.14      6.28  
+				float text_unit_scale = axis.units->unit_str.empty() ? 1.0f : 1.0f / axis.units->scale;
+
+				int start = floori(view0.y / axis.tick_step);
+				int   end =  ceili(view1.y / axis.tick_step);
+
 				for (int i=start; i<=end; ++i) {
-					float y = (float)i * tick_step.y;
+					for (int j=0; j<axis.subtick_count; ++j) {
+						float coord = ((float)i + axis.subticks[j].offs) * axis.tick_step;
+						if (coord == 0.0f) continue;
 
-					if (i!=0) {
-						draw_axis_tick_text(view, y, text_unit_scale_y, 0, y, float2(1, 0.5f), 1, unit_str_y);
+						if (axis.subticks[j].size >= 1.0f)
+							draw_axis_tick_text(view, coord, text_unit_scale, 0, coord, float2(1, 0.5f), 1, unit_str, axis.units->log);
 
-						line_vc += lines.draw_line(float3(-tick_sz.x, y, 0), float3(+tick_sz.x, y, 0), axes[1].col);
-					}
-
-					for (int j = 0; j < (int)ticks_y.size() && ticks_y[j].offs != 0; ++j) {
-						float ym = y + ticks_y[j].offs * tick_step.y;
-
-						if (ticks_y[j].size >= 1.0f)
-							draw_axis_tick_text(view, ym, text_unit_scale_y, 0, ym, float2(1, 0.5f), 1, unit_str_y);
-
-						float sz = tick_sz.x * ticks_y[j].size * 0.8f;
-						line_vc += lines.draw_line(float3(-sz, ym, 0), float3(+sz, ym, 0), axes[1].col);
+						float sz = tick_sz.x * axis.subticks[j].size * 0.8f;
+						line_vc += lines.draw_line(float3(-sz, coord, 0), float3(+sz, coord, 0), axis.col);
 					}
 				}
 			}
 		}
 
-		r.text.draw_text(axes[0].display_name, axis_label_text_px, axes[0].col,
-			map_text(float3(x1, 0, 0), view), float2(1,1), ticks_text_padding);
-		r.text.draw_text(axes[1].display_name, axis_label_text_px, axes[1].col,
-			map_text(float3(0, y1, 0), view), float2(0,0), ticks_text_padding);
+		// Draw axis labels
+		text.draw_text(axes[0].display_name, axis_label_text_px, axes[0].col,
+			map_text(float3(view1.x, 0, 0), view), float2(1,1), ticks_text_padding);
+		text.draw_text(axes[1].display_name, axis_label_text_px, axes[1].col,
+			map_text(float3(0, view1.y, 0), view), float2(0,0), ticks_text_padding);
 	}
 
 	void draw_equations (View3D const& view) {
@@ -422,12 +480,15 @@ struct App : public IApp {
 
 		float res = px2world.x * eq_res_px;
 
-		int start = floori(x0 / res), end = ceili(x1 / res);
+		int start = floori(view0.x / res), end = ceili(view1.x / res);
 
-		Variables vars;
+		ExecState state;
+		state.from_deg_x = axes[0].units->deg ? DEG_TO_RAD : 1;
+		state.to_deg_y   = axes[1].units->deg ? RAD_TO_DEG : 1;
+
 		auto eval = [&] (Equation& eq, float x, float* result) -> bool {
-			vars.x = x;
-			return eq.evaluate(vars, x, result);
+			state.vars.x = x;
+			return eq.evaluate(state, x, result);
 		};
 
 		bool dbg = ImGui::TreeNode("Debug Equations");
@@ -444,23 +505,28 @@ struct App : public IApp {
 
 			ZoneScopedN("draw equation");
 
-			float prevt = (float)start * res;
-			float prev;
-			bool exec_valid = eval(eq, prevt, &prev);
+			float prev_x = (float)start * res;
+			float prev_y;
+
+			float func_x = axes[0].units->log ? powf(10.0f, prev_x) : prev_x;
+			bool exec_valid = eval(eq, func_x, &prev_y);
+
+			prev_y = axes[1].units->log ? log10f(prev_y) : prev_y;
 
 			for (int i=start+1; exec_valid && i<=end; ++i) {
-				float t = (float)i * res;
-				float val;
-				exec_valid = eval(eq, t, &val);
+				float plot_x = (float)i * res;
+				func_x = axes[0].units->log ? powf(10.0f, plot_x) : plot_x;
 
-				if (axes[1].units->log)
-					val = log10f(val);
+				float func_y;
+				exec_valid = eval(eq, func_x, &func_y);
 
-				if (!isnan(prev) && !isnan(val))
-					eq_lines[eqi].vertex_count += lines.draw_line(float3(prevt, prev, 0), float3(t, val, 0), eq.col);
+				float plot_y = axes[1].units->log ? log10f(func_y) : func_y;
 
-				prevt = t;
-				prev = val;
+				if (!isnan(prev_y) && !isnan(plot_y))
+					eq_lines[eqi].vertex_count += lines.draw_line(float3(prev_x, prev_y, 0), float3(plot_x, plot_y, 0), eq.col);
+
+				prev_x = plot_x;
+				prev_y = plot_y;
 			}
 		}
 
@@ -471,12 +537,11 @@ struct App : public IApp {
 		ZoneScoped;
 
 		r.begin(view, viewport_size);
+		text.begin();
 		lines.begin();
 
 		glClearColor(0.05f, 0.06f, 0.07f, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		precompute(view);
 
 		draw_background_grid(view);
 		draw_axes(view);
@@ -491,7 +556,7 @@ struct App : public IApp {
 		lines.render(r.state, axis_lines);
 		lines.render(r.state, eq_lines.data(), (int)eq_lines.size());
 
-		r.text.render(r.state);
+		text.render(r.state);
 	}
 
 	virtual void frame (Input& I) {
@@ -500,8 +565,7 @@ struct App : public IApp {
 
 		View3D view;
 		if (!mode_3d) {
-			view = cam.update(I, (float2)I.window_size);
-			adjust_matrices(view);
+			view = update_2d_view(I, (float2)I.window_size);
 		} else {
 			view = flycam.update(I, (float2)I.window_size);
 		}	

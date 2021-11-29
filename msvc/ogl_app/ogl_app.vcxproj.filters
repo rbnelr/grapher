@@ -31,46 +31,49 @@
     <ClCompile Include="..\..\..\common\kisslib\timer.cpp">
       <Filter>common\kisslib</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\common\kisslib\tracy\TracyClient.cpp">
-      <Filter>common\kisslib\tracy</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\common\dear_imgui_custom\imgui_impl_glfw.cpp">
-      <Filter>common\kisslib\imgui</Filter>
+      <Filter>common\imgui</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\common\dear_imgui_custom\imgui_impl_opengl3.cpp">
-      <Filter>common\kisslib\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\common\dear_imgui\imgui.cpp">
-      <Filter>common\kisslib\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\common\dear_imgui\imgui_demo.cpp">
-      <Filter>common\kisslib\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\common\dear_imgui\imgui_draw.cpp">
-      <Filter>common\kisslib\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\common\dear_imgui\imgui_widgets.cpp">
-      <Filter>common\kisslib\imgui</Filter>
+      <Filter>common\imgui</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\common\glad\glad.c">
-      <Filter>common\kisslib\glad</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\common\dear_imgui\misc\cpp\imgui_stdlib.cpp">
-      <Filter>common\kisslib\imgui</Filter>
+      <Filter>common\glad</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\common\opengl_text.cpp">
       <Filter>common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\common\kisslib\stb_image.cpp">
-      <Filter>common\kisslib\stb</Filter>
+      <Filter>common\stb</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\common\kisslib\stb_rect_pack.cpp">
-      <Filter>common\kisslib\stb</Filter>
+      <Filter>common\stb</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\common\kisslib\stb_truetype.cpp">
-      <Filter>common\kisslib\stb</Filter>
+      <Filter>common\stb</Filter>
     </ClCompile>
     <ClCompile Include="..\..\grapher.cpp" />
+    <ClCompile Include="..\..\..\common\tracy\TracyClient.cpp">
+      <Filter>common\tracy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\dear_imgui\imgui.cpp">
+      <Filter>common\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\dear_imgui\imgui_demo.cpp">
+      <Filter>common\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\dear_imgui\imgui_draw.cpp">
+      <Filter>common\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\dear_imgui\imgui_tables.cpp">
+      <Filter>common\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\dear_imgui\imgui_widgets.cpp">
+      <Filter>common\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\common\dear_imgui\misc\cpp\imgui_stdlib.cpp">
+      <Filter>common\imgui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="common">
@@ -79,19 +82,16 @@
     <Filter Include="common\kisslib">
       <UniqueIdentifier>{3046ff47-d5ea-473b-89da-7c094bf4683d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="common\kisslib\kissmath">
-      <UniqueIdentifier>{603c112f-45bb-49a8-80b7-c9144f215ba3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="common\kisslib\tracy">
+    <Filter Include="common\tracy">
       <UniqueIdentifier>{582165fd-ac05-4b8e-acf2-69685c3ac0ef}</UniqueIdentifier>
     </Filter>
-    <Filter Include="common\kisslib\stb">
+    <Filter Include="common\stb">
       <UniqueIdentifier>{be23c1a2-9ee9-4e6e-884d-13d79a7929ad}</UniqueIdentifier>
     </Filter>
-    <Filter Include="common\kisslib\imgui">
+    <Filter Include="common\imgui">
       <UniqueIdentifier>{e59f20af-6413-4d69-b1aa-80ed4a3d58c3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="common\kisslib\glad">
+    <Filter Include="common\glad">
       <UniqueIdentifier>{497cc486-f191-46fb-bfc3-0f056b45815f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -183,128 +183,17 @@
     <ClInclude Include="..\..\..\common\kisslib\timer.hpp">
       <Filter>common\kisslib</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\bool2.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\bool3.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\bool4.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float2.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float2x2.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float2x3.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float3.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float3x3.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float3x4.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float4.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float4x4.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int2.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int3.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int4.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int64.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int64v2.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int64v3.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int64v4.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\transform2d.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\transform3d.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\uint8.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\uint8v2.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\uint8v3.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\uint8v4.hpp">
-      <Filter>common\kisslib\kissmath</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\tracy\Tracy.hpp">
-      <Filter>common\kisslib\tracy</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\tracy\TracyC.h">
-      <Filter>common\kisslib\tracy</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\kisslib\tracy\TracyOpenGL.hpp">
-      <Filter>common\kisslib\tracy</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\common\dear_imgui_custom\imgui_impl_glfw.h">
-      <Filter>common\kisslib\imgui</Filter>
+      <Filter>common\imgui</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\common\dear_imgui_custom\imgui_impl_opengl3.h">
-      <Filter>common\kisslib\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\dear_imgui\imconfig.h">
-      <Filter>common\kisslib\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\dear_imgui\imgui.h">
-      <Filter>common\kisslib\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\dear_imgui\imgui_internal.h">
-      <Filter>common\kisslib\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\dear_imgui\imstb_rectpack.h">
-      <Filter>common\kisslib\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\dear_imgui\imstb_textedit.h">
-      <Filter>common\kisslib\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\dear_imgui\imstb_truetype.h">
-      <Filter>common\kisslib\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\glad\glad.h">
-      <Filter>common\kisslib\glad</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\common\glad\khrplatform.h">
-      <Filter>common\kisslib\glad</Filter>
+      <Filter>common\imgui</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\common\camera.hpp">
       <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\common\dear_imgui_custom\dear_imgui.hpp">
-      <Filter>common\kisslib\imgui</Filter>
+      <Filter>common\imgui</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\common\opengl_text.hpp">
       <Filter>common</Filter>
@@ -313,13 +202,13 @@
       <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\common\kisslib\stb_image.hpp">
-      <Filter>common\kisslib\stb</Filter>
+      <Filter>common\stb</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\common\kisslib\stb_rect_pack.hpp">
-      <Filter>common\kisslib\stb</Filter>
+      <Filter>common\stb</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\common\kisslib\stb_truetype.hpp">
-      <Filter>common\kisslib\stb</Filter>
+      <Filter>common\stb</Filter>
     </ClInclude>
     <ClInclude Include="..\..\equations.hpp" />
     <ClInclude Include="..\..\tokenize.hpp" />
@@ -329,85 +218,8 @@
       <Filter>common\kisslib</Filter>
     </ClInclude>
     <ClInclude Include="..\..\codegen.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\common\kisslib\kissmath\output\bool2.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\bool3.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\bool4.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\float.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\float2.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\float2x2.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\float2x3.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\float3.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\float3x3.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\float3x4.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\float4.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\float4x4.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\int.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\int2.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\int3.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\int4.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\int64.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\int64v2.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\int64v3.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\int64v4.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\transform2d.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\transform3d.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\uint8.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\uint8v2.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\uint8v3.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
-    <None Include="..\..\..\common\kisslib\kissmath\output\uint8v4.inl">
-      <Filter>common\kisslib\kissmath</Filter>
-    </None>
+    <ClInclude Include="..\..\..\common\dear_imgui_custom\imconfig.h">
+      <Filter>common\imgui</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

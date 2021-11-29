@@ -230,7 +230,7 @@
       <PreprocessorDefinitions>BUILD_DEBUG=1;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\common;$(SolutionDir)..\..\..\common\dear_imgui;$(SolutionDir)..\..\..\common\dear_imgui_custom;$(SolutionDir)..\..\..\common\glad;$(SolutionDir)..\..\..\common\glfw-3.3.5\include;$(SolutionDir)..\..\..\common\kisslib\tracy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\common;$(SolutionDir)..\..\..\common\dear_imgui_custom;$(SolutionDir)..\..\..\common\dear_imgui;$(SolutionDir)..\..\..\common\glad;$(SolutionDir)..\..\..\common\glfw-3.3.5\include;$(SolutionDir)..\..\..\common\tracy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -254,7 +254,7 @@
       <PreprocessorDefinitions>BUILD_RELEASE=1;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\common;$(SolutionDir)..\..\..\common\dear_imgui;$(SolutionDir)..\..\..\common\dear_imgui_custom;$(SolutionDir)..\..\..\common\glad;$(SolutionDir)..\..\..\common\glfw-3.3.5\include;$(SolutionDir)..\..\..\common\kisslib\tracy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\common;$(SolutionDir)..\..\..\common\dear_imgui_custom;$(SolutionDir)..\..\..\common\dear_imgui;$(SolutionDir)..\..\..\common\glad;$(SolutionDir)..\..\..\common\glfw-3.3.5\include;$(SolutionDir)..\..\..\common\tracy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -283,7 +283,7 @@
       <PreprocessorDefinitions>BUILD_VALIDATE=1;_CRT_SECURE_NO_WARNINGS;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\common;$(SolutionDir)..\..\..\common\dear_imgui;$(SolutionDir)..\..\..\common\dear_imgui_custom;$(SolutionDir)..\..\..\common\glad;$(SolutionDir)..\..\..\common\glfw-3.3.5\include;$(SolutionDir)..\..\..\common\kisslib\tracy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\common;$(SolutionDir)..\..\..\common\dear_imgui_custom;$(SolutionDir)..\..\..\common\dear_imgui;$(SolutionDir)..\..\..\common\glad;$(SolutionDir)..\..\..\common\glfw-3.3.5\include;$(SolutionDir)..\..\..\common\tracy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -312,7 +312,7 @@
       <PreprocessorDefinitions>BUILD_TRACY=1;TRACY_ENABLE;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\common;$(SolutionDir)..\..\..\common\dear_imgui;$(SolutionDir)..\..\..\common\dear_imgui_custom;$(SolutionDir)..\..\..\common\glad;$(SolutionDir)..\..\..\common\glfw-3.3.5\include;$(SolutionDir)..\..\..\common\kisslib\tracy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\common;$(SolutionDir)..\..\..\common\dear_imgui_custom;$(SolutionDir)..\..\..\common\dear_imgui;$(SolutionDir)..\..\..\common\glad;$(SolutionDir)..\..\..\common\glfw-3.3.5\include;$(SolutionDir)..\..\..\common\tracy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -335,6 +335,7 @@
     <ClCompile Include="..\..\..\common\dear_imgui\imgui.cpp" />
     <ClCompile Include="..\..\..\common\dear_imgui\imgui_demo.cpp" />
     <ClCompile Include="..\..\..\common\dear_imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\..\..\common\dear_imgui\imgui_tables.cpp" />
     <ClCompile Include="..\..\..\common\dear_imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\..\..\common\dear_imgui\misc\cpp\imgui_stdlib.cpp" />
     <ClCompile Include="..\..\..\common\dear_imgui_custom\imgui_impl_glfw.cpp" />
@@ -352,26 +353,19 @@
     <ClCompile Include="..\..\..\common\kisslib\string.cpp" />
     <ClCompile Include="..\..\..\common\kisslib\threadpool.cpp" />
     <ClCompile Include="..\..\..\common\kisslib\timer.cpp" />
-    <ClCompile Include="..\..\..\common\kisslib\tracy\TracyClient.cpp" />
     <ClCompile Include="..\..\..\common\opengl.cpp" />
     <ClCompile Include="..\..\..\common\opengl_text.cpp" />
+    <ClCompile Include="..\..\..\common\tracy\TracyClient.cpp" />
     <ClCompile Include="..\..\grapher.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\common\camera.hpp" />
     <ClInclude Include="..\..\..\common\common.hpp" />
     <ClInclude Include="..\..\..\common\common_app.hpp" />
-    <ClInclude Include="..\..\..\common\dear_imgui\imconfig.h" />
-    <ClInclude Include="..\..\..\common\dear_imgui\imgui.h" />
-    <ClInclude Include="..\..\..\common\dear_imgui\imgui_internal.h" />
-    <ClInclude Include="..\..\..\common\dear_imgui\imstb_rectpack.h" />
-    <ClInclude Include="..\..\..\common\dear_imgui\imstb_textedit.h" />
-    <ClInclude Include="..\..\..\common\dear_imgui\imstb_truetype.h" />
     <ClInclude Include="..\..\..\common\dear_imgui_custom\dear_imgui.hpp" />
+    <ClInclude Include="..\..\..\common\dear_imgui_custom\imconfig.h" />
     <ClInclude Include="..\..\..\common\dear_imgui_custom\imgui_impl_glfw.h" />
     <ClInclude Include="..\..\..\common\dear_imgui_custom\imgui_impl_opengl3.h" />
-    <ClInclude Include="..\..\..\common\glad\glad.h" />
-    <ClInclude Include="..\..\..\common\glad\khrplatform.h" />
     <ClInclude Include="..\..\..\common\input.hpp" />
     <ClInclude Include="..\..\..\common\input_buttons.hpp" />
     <ClInclude Include="..\..\..\common\kisslib\allocator.hpp" />
@@ -384,32 +378,6 @@
     <ClInclude Include="..\..\..\common\kisslib\file_io.hpp" />
     <ClInclude Include="..\..\..\common\kisslib\image.hpp" />
     <ClInclude Include="..\..\..\common\kisslib\kissmath.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\bool2.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\bool3.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\bool4.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float2.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float2x2.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float2x3.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float3.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float3x3.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float3x4.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float4.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\float4x4.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int2.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int3.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int4.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int64.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int64v2.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int64v3.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\int64v4.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\transform2d.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\transform3d.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\uint8.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\uint8v2.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\uint8v3.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\kissmath\output\uint8v4.hpp" />
     <ClInclude Include="..\..\..\common\kisslib\kissmath_colors.hpp" />
     <ClInclude Include="..\..\..\common\kisslib\macros.hpp" />
     <ClInclude Include="..\..\..\common\kisslib\strparse.hpp" />
@@ -428,9 +396,6 @@
     <ClInclude Include="..\..\..\common\kisslib\threadpool.hpp" />
     <ClInclude Include="..\..\..\common\kisslib\threadsafe_queue.hpp" />
     <ClInclude Include="..\..\..\common\kisslib\timer.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\tracy\Tracy.hpp" />
-    <ClInclude Include="..\..\..\common\kisslib\tracy\TracyC.h" />
-    <ClInclude Include="..\..\..\common\kisslib\tracy\TracyOpenGL.hpp" />
     <ClInclude Include="..\..\..\common\opengl.hpp" />
     <ClInclude Include="..\..\..\common\opengl_text.hpp" />
     <ClInclude Include="..\..\..\common\window.hpp" />
@@ -439,34 +404,6 @@
     <ClInclude Include="..\..\execute.hpp" />
     <ClInclude Include="..\..\parse.hpp" />
     <ClInclude Include="..\..\tokenize.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\common\kisslib\kissmath\output\bool2.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\bool3.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\bool4.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\float.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\float2.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\float2x2.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\float2x3.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\float3.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\float3x3.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\float3x4.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\float4.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\float4x4.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\int.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\int2.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\int3.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\int4.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\int64.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\int64v2.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\int64v3.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\int64v4.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\transform2d.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\transform3d.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\uint8.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\uint8v2.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\uint8v3.inl" />
-    <None Include="..\..\..\common\kisslib\kissmath\output\uint8v4.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

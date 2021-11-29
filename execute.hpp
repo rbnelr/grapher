@@ -19,64 +19,50 @@ float mymod (float a, float b) {
 	return val;
 }
 
-struct Variables {
-	float x;
+struct ExecState {
+	
+	struct Variables {
+		float x;
 
-	bool lookup (std::string_view const& name, float* out) {
-		if (name == "x") {
-			*out = x;
-			return true;
+		bool lookup (std::string_view const& name, float* out) {
+			if (name == "x") {
+				*out = x;
+				return true;
+			}
+
+			return false;
 		}
+	};
 
-		return false;
-	}
+	Variables vars;
+
+	// if axis X in deg mode -> (2*PI)/360 else 1
+	// -> for  angle -> scalar  funcs (eg. sin)
+	float from_deg_x;
+	// if axis Y in deg mode -> 360/(2*PI) else 1
+	// -> for  scalar -> angle  funcs (eg. asin)
+	float   to_deg_y;
 };
 
-inline bool exec_sqrt (int argc, float* args, float* result, const char** errstr) {
-	if (argc != 1) {
-		*errstr = "sqrt takes 1 argument!";
-		return false;
+#define ARGCHECK(funcname, expected_argc) \
+	if (argc != expected_argc) { \
+		*errstr = funcname " takes " TO_STRING(expected_argc) " argument!"; \
+		return false; \
 	}
+
+inline bool exec_sqrt (int argc, float* args, float* result, const char** errstr) {
+	ARGCHECK("sqrt", 1)
 	*result = sqrtf(args[0]);
 	return true;
 }
 inline bool exec_abs (int argc, float* args, float* result, const char** errstr) {
-	if (argc != 1) {
-		*errstr = "abs takes 1 argument!";
-		return false;
-	}
+	ARGCHECK("abs", 1)
 	*result = fabsf(args[0]);
 	return true;
 }
-inline bool exec_sin (int argc, float* args, float* result, const char** errstr) {
-	if (argc != 1) {
-		*errstr = "sin takes 1 argument!";
-		return false;
-	}
-	*result = sinf(args[0]);
-	return true;
-}
-inline bool exec_cos (int argc, float* args, float* result, const char** errstr) {
-	if (argc != 1) {
-		*errstr = "cos takes 1 argument!";
-		return false;
-	}
-	*result = cosf(args[0]);
-	return true;
-}
-inline bool exec_tan (int argc, float* args, float* result, const char** errstr) {
-	if (argc != 1) {
-		*errstr = "tan takes 1 argument!";
-		return false;
-	}
-	*result = tanf(args[0]);
-	return true;
-}
+
 inline bool exec_mod (int argc, float* args, float* result, const char** errstr) {
-	if (argc != 2) {
-		*errstr = "mod takes 2 arguments!";
-		return false;
-	}
+	ARGCHECK("mod", 2)
 	*result = mymod(args[0], args[1]);
 	return true;
 }
@@ -107,26 +93,87 @@ inline bool exec_max (int argc, float* args, float* result, const char** errstr)
 	*result = maxf;
 	return true;
 }
+inline bool exec_clamp (int argc, float* args, float* result, const char** errstr) {
+	ARGCHECK("clamp", 3)
+	*result = clamp(args[0], args[1], args[2]);
+	return true;
+}
 
-inline bool call_func (Operation& op, float* args, float* result, const char** errstr) {
+inline bool exec_sin (ExecState& state, int argc, float* args, float* result, const char** errstr) {
+	ARGCHECK("sin", 1)
+	*result = sinf(args[0] * state.from_deg_x); // assume args[0] comes from x axis for now 
+	return true;
+}
+inline bool exec_cos (ExecState& state, int argc, float* args, float* result, const char** errstr) {
+	ARGCHECK("cos", 1)
+	*result = cosf(args[0] * state.from_deg_x);
+	return true;
+}
+inline bool exec_tan (ExecState& state, int argc, float* args, float* result, const char** errstr) {
+	ARGCHECK("tan", 1)
+	*result = tanf(args[0] * state.from_deg_x);
+	return true;
+}
+inline bool exec_asin (ExecState& state, int argc, float* args, float* result, const char** errstr) {
+	ARGCHECK("asin", 1)
+	*result = asinf(args[0]) * state.to_deg_y; // assume result goes to y axis for now 
+	return true;
+}
+inline bool exec_acos (ExecState& state, int argc, float* args, float* result, const char** errstr) {
+	ARGCHECK("acos", 1)
+	*result = acosf(args[0]) * state.to_deg_y;
+	return true;
+}
+inline bool exec_atan (ExecState& state, int argc, float* args, float* result, const char** errstr) {
+	ARGCHECK("atan", 1)
+	*result = atanf(args[0]) * state.to_deg_y;
+	return true;
+}
+
+
+inline bool call_func (ExecState& state, Operation& op, float* args, float* result, const char** errstr) {
 	
-	if      (op.text == "sqrt") exec_sqrt(op.argc, args, result, errstr);
-	else if (op.text == "abs")  exec_abs(op.argc, args, result, errstr);
-	else if (op.text == "sin")  exec_sin(op.argc, args, result, errstr);
-	else if (op.text == "cos")  exec_cos(op.argc, args, result, errstr);
-	else if (op.text == "tan")  exec_tan(op.argc, args, result, errstr);
-	else if (op.text == "mod")  exec_mod(op.argc, args, result, errstr);
-	else if (op.text == "min")  exec_min(op.argc, args, result, errstr);
-	else if (op.text == "max")  exec_max(op.argc, args, result, errstr);
+	if      (op.text == "sqrt")  return exec_sqrt (       op.argc, args, result, errstr);
+	else if (op.text == "abs")   return exec_abs  (       op.argc, args, result, errstr);
+	
+	else if (op.text == "min")   return exec_min  (       op.argc, args, result, errstr);
+	else if (op.text == "max")   return exec_max  (       op.argc, args, result, errstr);
+	else if (op.text == "clamp") return exec_clamp(       op.argc, args, result, errstr);
+
+	else if (op.text == "sin")   return exec_sin  (state, op.argc, args, result, errstr);
+	else if (op.text == "cos")   return exec_cos  (state, op.argc, args, result, errstr);
+	else if (op.text == "tan")   return exec_tan  (state, op.argc, args, result, errstr);
+	else if (op.text == "asin")  return exec_asin (state, op.argc, args, result, errstr);
+	else if (op.text == "acos")  return exec_acos (state, op.argc, args, result, errstr);
+	else if (op.text == "atan")  return exec_atan (state, op.argc, args, result, errstr);
+
+	else if (op.text == "mod")   return exec_mod  (       op.argc, args, result, errstr);
+
 	else {
 		*errstr = "unknown function!";
 		return false;
 	}
+}
+inline bool call_const_func (Operation& op, float* args, float* result, const char** errstr) {
 
-	return true;
+	if      (op.text == "sqrt")  return exec_sqrt (       op.argc, args, result, errstr);
+	else if (op.text == "abs")   return exec_abs  (       op.argc, args, result, errstr);
+
+	else if (op.text == "min")   return exec_min  (       op.argc, args, result, errstr);
+	else if (op.text == "max")   return exec_max  (       op.argc, args, result, errstr);
+	else if (op.text == "clamp") return exec_clamp(       op.argc, args, result, errstr);
+
+	// no trig functions due to rad / deg modes not allowing for constant folding
+
+	else if (op.text == "mod")   return exec_mod  (       op.argc, args, result, errstr);
+
+	else {
+		*errstr = "unknown function!";
+		return false;
+	}
 }
 
-bool execute (Variables& vars, std::vector<Operation>& ops, float* result, std::string* last_err) {
+bool execute (ExecState& state, std::vector<Operation>& ops, float* result, std::string* last_err) {
 	static constexpr int STACK_SIZE = 64;
 
 	float stack[STACK_SIZE];
@@ -146,7 +193,7 @@ bool execute (Variables& vars, std::vector<Operation>& ops, float* result, std::
 			} break;
 
 			case OP_VARIABLE: {
-				if (!vars.lookup(op.text, &value)) {
+				if (!state.vars.lookup(op.text, &value)) {
 					errstr = "vars.lookup() failed!";
 					goto error;
 				}
@@ -159,7 +206,7 @@ bool execute (Variables& vars, std::vector<Operation>& ops, float* result, std::
 				}
 
 				stack_idx -= op.argc;
-				if (!call_func(op, &stack[stack_idx], &value, &errstr))
+				if (!call_func(state, op, &stack[stack_idx], &value, &errstr))
 					goto error;
 
 			} break;

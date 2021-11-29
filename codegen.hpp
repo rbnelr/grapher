@@ -31,7 +31,7 @@ inline bool constant_folding (ASTNode* node) {
 	switch (node->op.code) {
 		case OP_FUNCCALL: {
 			assert((int)values.size() == node->op.argc);
-			call_func(node->op, values.data(), &value, &errstr);
+			call_const_func(node->op, values.data(), &value, &errstr);
 		} break;
 
 		case OP_UNARY_NEGATE: {
