@@ -238,6 +238,7 @@ struct App : public IApp {
 
 	LineRenderer::DrawCall              axis_lines;
 	std::vector<LineRenderer::DrawCall> eq_lines;
+	LineRenderer::DrawCall              select_lines;
 
 	Shader* grid_shad = g_shaders.compile("grid");
 	Vao dummy_vao = {"dummy_vao"};
@@ -310,7 +311,7 @@ struct App : public IApp {
 	float4 eq_col = float4(0.95f,0.95f,0.95f,1);
 
 	// 
-	float2 px2world;
+	float2 px2world, world2px;
 
 	float2 view0, view1;
 
@@ -332,17 +333,17 @@ struct App : public IApp {
 			view.world2clip = view.world2clip * stretch2world;
 			view.clip2world = world2stretch * view.clip2world;
 
-			view.frust_near_size *= scale_fac;
 			view.cam_pos *= float3(scale_fac, 1);
 		}
 
 		//
-		px2world = view.frust_near_size / view.viewport_size;
+		px2world = view.frust_near_size * scale_fac / view.viewport_size;
+		world2px = 1.0f / px2world;
 
 		axes[0].get_tick_step(px2world.x);
 		axes[1].get_tick_step(px2world.y);
 		
-		float2 view_size = view.frust_near_size * 0.5f;
+		float2 view_size = view.frust_near_size * scale_fac * 0.5f;
 
 		view0 = (float2)view.cam_pos - view_size;
 		view1 = (float2)view.cam_pos + view_size;
@@ -350,7 +351,7 @@ struct App : public IApp {
 		return view;
 	}
 
-	void draw_background_grid (View3D const& view) {
+	void draw_background_grid (Input& I, View3D const& view) {
 		OGL_TRACE("background_grid");
 		ZoneScoped
 
@@ -367,7 +368,7 @@ struct App : public IApp {
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 
-	void draw_axes (View3D const& view) {
+	void draw_axes (Input& I, View3D const& view) {
 		ZoneScoped;
 
 		axis_lines = lines.begin_draw(axis_line_w, axis_line_aa);
@@ -473,14 +474,10 @@ struct App : public IApp {
 			map_text(float3(0, view1.y, 0), view), float2(0,0), ticks_text_padding);
 	}
 
-	void draw_equations (View3D const& view) {
+	int clicked_eq = -1;
+
+	void draw_equations (Input& I, View3D const& view) {
 		ZoneScoped;
-
-		eq_res_px = max(eq_res_px, 1.0f / 8);
-
-		float res = px2world.x * eq_res_px;
-
-		int start = floori(view0.x / res), end = ceili(view1.x / res);
 
 		ExecState state;
 		state.from_deg_x = axes[0].units->deg ? DEG_TO_RAD : 1;
@@ -495,11 +492,39 @@ struct App : public IApp {
 
 		eq_lines.resize(equations.equations.size());
 
-		for (int eqi=0; eqi<(int)equations.equations.size(); ++eqi) {
-			auto& eq = equations.equations[eqi];
+		float2 cursor = I.cursor_pos_bottom_up;
+
+		float nearest_dist = INF;
+		float2 nearest_point;
+		int nearest_eq = -1;
+
+		auto cursor_select_line = [&] (int eq_i, float2 a, float2 b) {
+			if (clicked_eq >= 0 && eq_i != clicked_eq)
+				return;
+
+			a = (a - view0) * world2px;
+			b = (b - view0) * world2px;
+
+			float2 point;
+			float dist = point_line_segment_dist(a, b - a, cursor, &point);
+			
+			if (dist < nearest_dist) {
+				nearest_dist = dist;
+				nearest_point = point;
+				nearest_eq = eq_i;
+			}
+		};
+
+		eq_res_px = max(eq_res_px, 1.0f / 8);
+
+		float res = px2world.x * eq_res_px;
+		int start = floori(view0.x / res), end = ceili(view1.x / res);
+
+		for (int eq_i=0; eq_i<(int)equations.equations.size(); ++eq_i) {
+			auto& eq = equations.equations[eq_i];
 			if (!eq.valid || !eq.enable) continue;
 
-			eq_lines[eqi] = lines.begin_draw(eq.line_w);
+			eq_lines[eq_i] = lines.begin_draw(eq.line_w);
 
 			if (dbg) dbg_equation(eq);
 
@@ -522,8 +547,11 @@ struct App : public IApp {
 
 				float plot_y = axes[1].units->log ? log10f(func_y) : func_y;
 
-				if (!isnan(prev_y) && !isnan(plot_y))
-					eq_lines[eqi].vertex_count += lines.draw_line(float3(prev_x, prev_y, 0), float3(plot_x, plot_y, 0), eq.col);
+				if (!isnan(prev_y) && !isnan(plot_y)) {
+					eq_lines[eq_i].vertex_count += lines.draw_line(float3(prev_x, prev_y, 0), float3(plot_x, plot_y, 0), eq.col);
+					
+					cursor_select_line(eq_i, float2(prev_x,prev_y), float2(plot_x,plot_y));
+				}
 
 				prev_x = plot_x;
 				prev_y = plot_y;
@@ -531,6 +559,31 @@ struct App : public IApp {
 		}
 
 		if (dbg) ImGui::TreePop();
+
+		select_lines = lines.begin_draw(1.5f);
+
+		ImGui::Text("nearest_dist: %7.3f nearest_eq: %d", nearest_dist, nearest_eq);
+		if (nearest_dist < 20 || clicked_eq >= 0) {
+			float2 pos = nearest_point * px2world + view0;
+
+			float3 a = float3(pos + float2(-ticks_px, 0) * px2world, 0);
+			float3 b = float3(pos + float2(+ticks_px, 0) * px2world, 0);
+			float3 c = float3(pos + float2(0, -ticks_px) * px2world, 0);
+			float3 d = float3(pos + float2(0, +ticks_px) * px2world, 0);
+			auto& col = equations.equations[nearest_eq].col;
+
+			select_lines.vertex_count += lines.draw_line(a, b, col);
+			select_lines.vertex_count += lines.draw_line(c, d, col);
+
+			auto p = prints("(%.3f, %.3f)", pos.x, pos.y);
+			text.draw_text(p.c_str(), text_size, float4(0.98f,0.98f,0.98f,1),
+				map_text(float3(pos, 0), view), 0, ticks_px * 1.5f);
+
+			if (I.buttons[MOUSE_BUTTON_LEFT].went_down)
+				clicked_eq = nearest_eq;
+		}
+		if (I.buttons[MOUSE_BUTTON_LEFT].went_up)
+			clicked_eq = -1;
 	}
 
 	void render (Input& I, View3D const& view, int2 const& viewport_size) {
@@ -543,9 +596,11 @@ struct App : public IApp {
 		glClearColor(0.05f, 0.06f, 0.07f, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		draw_background_grid(view);
-		draw_axes(view);
-		draw_equations(view);
+		draw_background_grid(I, view);
+
+		draw_equations(I, view);
+
+		draw_axes(I, view);
 
 		//static float size = 20;
 		//ImGui::SliderFloat("size", &size, 0, 70);
@@ -555,6 +610,7 @@ struct App : public IApp {
 		lines.upload_vertices();
 		lines.render(r.state, axis_lines);
 		lines.render(r.state, eq_lines.data(), (int)eq_lines.size());
+		lines.render(r.state, select_lines);
 
 		text.render(r.state);
 	}
