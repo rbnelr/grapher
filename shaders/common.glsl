@@ -6,16 +6,6 @@
 #define vs2fs in
 #endif
 
-#define FULLSCREEN_TRIANGLE \
-	vs2fs vec2 vs_uv; \
-	#ifdef _VERTEX \
-		void main () { \
-			gl_Position = vec4(vec2(gl_VertexID & 1, gl_VertexID >> 1) * 4.0 - 1.0, 0.0, 1.0); \
-			vs_uv = vec2(vec2(gl_VertexID & 1, gl_VertexID >> 1) * 2.0); \
-		} \
-	#endif
-
-
 float map (float x, float a, float b) {
 	return (x - a) / (b - a);
 }

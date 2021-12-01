@@ -398,6 +398,8 @@
     <ClInclude Include="..\..\..\common\kisslib\timer.hpp" />
     <ClInclude Include="..\..\..\common\opengl.hpp" />
     <ClInclude Include="..\..\..\common\opengl_text.hpp" />
+    <ClInclude Include="..\..\..\common\tracy\Tracy.hpp" />
+    <ClInclude Include="..\..\..\common\tracy\TracyOpenGL.hpp" />
     <ClInclude Include="..\..\..\common\window.hpp" />
     <ClInclude Include="..\..\codegen.hpp" />
     <ClInclude Include="..\..\equations.hpp" />

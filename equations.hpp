@@ -233,7 +233,6 @@ struct Equations {
 
 		bool reparse = ImGui::Checkbox("codegen optimize", &Equation::optimize);
 		
-		reparse = true;
 		if (reparse) {
 			for (auto& eq : equations)
 			eq.parse();

@@ -434,7 +434,7 @@ struct App : public IApp {
 						if (axis.subticks[j].size >= 1.0f)
 							draw_axis_tick_text(view, coord, text_unit_scale, coord, 0, float2(0.5f, 0), 0, unit_str, axis.units->log);
 
-						float sz = tick_sz.y * axis.subticks[j].size * 0.8f;
+						float sz = tick_sz.y * axis.subticks[j].size;
 						line_vc += lines.draw_line(float3(coord, -sz, 0), float3(coord, +sz, 0), axis.col);
 					}
 				}
@@ -462,21 +462,31 @@ struct App : public IApp {
 						if (axis.subticks[j].size >= 1.0f)
 							draw_axis_tick_text(view, coord, text_unit_scale, 0, coord, float2(1, 0.5f), 1, unit_str, axis.units->log);
 
-						float sz = tick_sz.x * axis.subticks[j].size * 0.8f;
+						float sz = tick_sz.x * axis.subticks[j].size;
 						line_vc += lines.draw_line(float3(-sz, coord, 0), float3(+sz, coord, 0), axis.col);
 					}
 				}
 			}
 		}
 
-		// Draw axis labels
-		text.draw_text(axes[0].display_name, axis_label_text_px, axes[0].col,
-			map_text(float3(view1.x, 0, 0), view), float2(1,1), ticks_text_padding);
-		text.draw_text(axes[1].display_name, axis_label_text_px, axes[1].col,
-			map_text(float3(0, view1.y, 0), view), float2(0,0), ticks_text_padding);
+		if (hover_eq >= 0) { // Draw hover point ticks
+			float2 sz = tick_sz * 1.2f;
+			line_vc += lines.draw_line(float3(hover_point.x, -sz.y, 0), float3(hover_point.x, +sz.y, 0), equations.equations[hover_eq].col);
+			line_vc += lines.draw_line(float3(-sz.x, hover_point.y, 0), float3(+sz.x, hover_point.y, 0), equations.equations[hover_eq].col);
+		}
+
+		{ // Draw axis labels
+			text.draw_text(axes[0].display_name, axis_label_text_px, axes[0].col,
+				map_text(float3(view1.x, 0, 0), view), float2(1,1), ticks_text_padding);
+			text.draw_text(axes[1].display_name, axis_label_text_px, axes[1].col,
+				map_text(float3(0, view1.y, 0), view), float2(0,0), ticks_text_padding);
+		}
 	}
 
 	int clicked_eq = -1;
+
+	int hover_eq = -1;
+	float2 hover_point = -1;
 
 	void draw_equations (Input& I, View3D const& view) {
 		ZoneScoped;
@@ -579,9 +589,14 @@ struct App : public IApp {
 
 			if (I.buttons[MOUSE_BUTTON_LEFT].went_down)
 				clicked_eq = nearest_eq;
+			if (!I.buttons[MOUSE_BUTTON_LEFT].is_down)
+				clicked_eq = -1;
+
+			hover_point = pos;
+			hover_eq = nearest_eq;
+		} else {
+			hover_eq = -1;
 		}
-		if (!I.buttons[MOUSE_BUTTON_LEFT].is_down)
-			clicked_eq = -1;
 	}
 
 	void render (Input& I, View3D const& view, int2 const& viewport_size) {

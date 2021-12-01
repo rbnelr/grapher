@@ -221,5 +221,11 @@
     <ClInclude Include="..\..\..\common\dear_imgui_custom\imconfig.h">
       <Filter>common\imgui</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\common\tracy\Tracy.hpp">
+      <Filter>common\tracy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\common\tracy\TracyOpenGL.hpp">
+      <Filter>common\tracy</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
