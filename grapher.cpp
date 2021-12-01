@@ -240,6 +240,8 @@ struct App : public IApp {
 	std::vector<LineRenderer::DrawCall> eq_lines;
 	LineRenderer::DrawCall              select_lines;
 
+	ShapeRenderer circles = {"circle_render"};
+
 	Shader* grid_shad = g_shaders.compile("grid");
 	Vao dummy_vao = {"dummy_vao"};
 
@@ -508,7 +510,9 @@ struct App : public IApp {
 			float2 point;
 			float dist = point_line_segment_dist(a, b - a, cursor, &point);
 			
-			if (dist < nearest_dist) {
+			// use <= to let later equations override the nearest point, to better match what's seen visually
+			// (later equation lines are drawn on top)
+			if (dist <= nearest_dist) {
 				nearest_dist = dist;
 				nearest_point = point;
 				nearest_eq = eq_i;
@@ -564,16 +568,10 @@ struct App : public IApp {
 
 		ImGui::Text("nearest_dist: %7.3f nearest_eq: %d", nearest_dist, nearest_eq);
 		if (nearest_dist < 20 || clicked_eq >= 0) {
+			auto& eq = equations.equations[nearest_eq];
+
 			float2 pos = nearest_point * px2world + view0;
-
-			float3 a = float3(pos + float2(-ticks_px, 0) * px2world, 0);
-			float3 b = float3(pos + float2(+ticks_px, 0) * px2world, 0);
-			float3 c = float3(pos + float2(0, -ticks_px) * px2world, 0);
-			float3 d = float3(pos + float2(0, +ticks_px) * px2world, 0);
-			auto& col = equations.equations[nearest_eq].col;
-
-			select_lines.vertex_count += lines.draw_line(a, b, col);
-			select_lines.vertex_count += lines.draw_line(c, d, col);
+			circles.draw(float3(pos, 0), max(eq.line_w * 2.0f * 2.00f, 5.0f), eq.col * float4(0.8f,0.8f,0.8f, 1));
 
 			auto p = prints("(%.3f, %.3f)", pos.x, pos.y);
 			text.draw_text(p.c_str(), text_size, float4(0.98f,0.98f,0.98f,1),
@@ -592,6 +590,7 @@ struct App : public IApp {
 		r.begin(view, viewport_size);
 		text.begin();
 		lines.begin();
+		circles.begin();
 
 		glClearColor(0.05f, 0.06f, 0.07f, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -611,6 +610,9 @@ struct App : public IApp {
 		lines.render(r.state, axis_lines);
 		lines.render(r.state, eq_lines.data(), (int)eq_lines.size());
 		lines.render(r.state, select_lines);
+
+		circles.upload_vertices();
+		circles.render(r.state);
 
 		text.render(r.state);
 	}

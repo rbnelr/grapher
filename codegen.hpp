@@ -14,7 +14,7 @@ inline bool constant_folding (ASTNode* node) {
 	std::vector<float> values;
 	values.reserve(16);
 
-	for (auto* cur = GET(node->child); cur; cur = GET(cur->next)) {
+	for (auto* cur = GET_AST_PTR(node->child); cur; cur = GET_AST_PTR(cur->next)) {
 		bool is_const = constant_folding(cur);
 		if (!is_const)
 			const_children = false;
@@ -73,7 +73,7 @@ inline bool constant_folding (ASTNode* node) {
 
 inline void emit_ops (ASTNode const* node, std::vector<Operation>* ops) {
 
-	for (auto* cur = GET(node->child); cur; cur = GET(cur->next))
+	for (auto* cur = GET_AST_PTR(node->child); cur; cur = GET_AST_PTR(cur->next))
 		emit_ops(cur, ops);
 
 	ops->emplace_back( node->op );

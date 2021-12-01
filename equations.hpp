@@ -53,7 +53,7 @@ struct Equation {
 			return;
 		}
 
-		valid = generate_code(GET(ast), &ops, &last_err, optimize);
+		valid = generate_code(GET_AST_PTR(ast), &ops, &last_err, optimize);
 
 		exec_valid = true;
 	}

@@ -77,7 +77,7 @@ struct Operation {
 
 struct ASTNode;
 
-#define BUMP_ALLOCATOR 1
+#define BUMP_ALLOCATOR 0
 #if BUMP_ALLOCATOR
 typedef ASTNode* ast_ptr;
 
@@ -132,13 +132,13 @@ struct BlockBumpAllocator {
 	}
 };
 
-#define GET(ptr) (ptr)
+#define GET_AST_PTR(ptr) (ptr)
 #else
 typedef std::unique_ptr<ASTNode> ast_ptr;
 
 struct BlockBumpAllocator {};
 
-#define GET(ptr) (ptr).get()
+#define GET_AST_PTR(ptr) (ptr).get()
 #endif
 
 struct ASTNode {
@@ -171,7 +171,7 @@ struct Parser {
 	#else
 		ast_ptr node = ast_ptr(new ASTNode());
 	#endif
-		memset(GET(node), 0, sizeof(ASTNode));
+		memset(GET_AST_PTR(node), 0, sizeof(ASTNode));
 
 		node->op.code = opcode;
 		node->op.text = (std::string_view)tok_for_text;
