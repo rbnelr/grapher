@@ -76,21 +76,77 @@ struct Operation {
 };
 
 struct ASTNode;
+
+#define BUMP_ALLOCATOR 1
+#if BUMP_ALLOCATOR
+typedef ASTNode* ast_ptr;
+
+struct BlockBumpAllocator {
+	char* next = nullptr;
+	char* end  = nullptr;
+
+	static constexpr size_t BLOCK_SIZE = 16 * KB;
+	std::vector<char*> blocks;
+
+	// note: no T::ctor will be called!
+	// use placement new yourself if needed
+	// this allocator does not call ctors, since it can't call dtors later since individual item locations (and their types) are not remembered
+	template <typename T>
+	T* alloc () {
+		// can't allocate anything larger than BLOCK_SIZE
+		if (sizeof(T) > BLOCK_SIZE) {
+			assert(false);
+			return nullptr;
+		}
+		// go to next block if item does not fit onto current block
+		if (next + sizeof(T) > end)
+			next = nullptr;
+		if (!next)
+			alloc_block();
+
+		// align next ptr where appropriate
+		next = (char*)align_up((uintptr_t)next, alignof(T));
+
+		// allocate by returning next and incrementing next past end of current item
+		T* item = (T*)next;
+		next += sizeof(T);
+
+		return item;
+	}
+
+	void alloc_block () {
+		auto* block = new char[BLOCK_SIZE];
+		blocks.emplace_back(block);
+
+		next = block;
+		end  = block + BLOCK_SIZE;
+	}
+	BlockBumpAllocator () {
+		blocks.reserve(32);
+		alloc_block();
+	}
+	// BlockBumpAllocator dtor deallocs all allocated items as well
+	~BlockBumpAllocator () {
+		for (auto block : blocks)
+			delete[] block;
+	}
+};
+
+#define GET(ptr) (ptr)
+#else
 typedef std::unique_ptr<ASTNode> ast_ptr;
+
+struct BlockBumpAllocator {};
+
+#define GET(ptr) (ptr).get()
+#endif
 
 struct ASTNode {
 	Operation        op;
 
-	ast_ptr          next;
-	ast_ptr          child; // first child node, following are linked via next pointer
+	ast_ptr          next  = nullptr;
+	ast_ptr          child = nullptr; // first child node, following are linked via next pointer
 };
-
-inline ast_ptr ast_node (OPType opcode, Token& tok_for_text) {
-	ast_ptr node = std::make_unique<ASTNode>();
-	node->op.code = opcode;
-	node->op.text = (std::string_view)tok_for_text;
-	return node;
-}
 
 inline bool lookup_constant (std::string_view const& name, float* out) {
 	static constexpr float PHI = 1.61803398874989484820f; // golden ratio
@@ -103,147 +159,165 @@ inline bool lookup_constant (std::string_view const& name, float* out) {
 	return true;
 }
 
-// Recursive decent parsing with precedence climbing
-// with a little help from https://eli.thegreenplace.net/2012/08/02/parsing-expressions-by-precedence-climbing
+struct Parser {
+	Token*      tok;
 
-inline ast_ptr expression (Token*& tok, std::string* last_err, int min_prec = 0);
+	std::string&        last_err;
+	BlockBumpAllocator& allocator;
 
-//    a single value                  ex. 5.3  or  x
-// or an expression in parentheses    ex. (-x^3 + 5)
-// or a function call                 ex. abs(x+3)
-// any of these can be preceded by a unary minus  -5.3 or -x
-inline ast_ptr atom (Token*& tok, std::string* last_err) {
-	ast_ptr result;
-	if (tok->type == T_PAREN_OPEN) {
-		tok++;
+	ast_ptr ast_node (OPType opcode, Token& tok_for_text) {
+	#if BUMP_ALLOCATOR
+		ast_ptr node = allocator.alloc<ASTNode>();
+	#else
+		ast_ptr node = ast_ptr(new ASTNode());
+	#endif
+		memset(GET(node), 0, sizeof(ASTNode));
 
-		result = expression(tok, last_err);
-		if (!result) return nullptr;
-
-		if (tok->type != T_PAREN_CLOSE) {
-			*last_err = "syntax error, ')' expected!";
-			return nullptr;
-		}
-		tok++;
+		node->op.code = opcode;
+		node->op.text = (std::string_view)tok_for_text;
+		return node;
 	}
-	else if (tok[0].type == T_IDENTIFIER && tok[1].type == T_PAREN_OPEN) {
-		// function call
-		result = ast_node(OP_FUNCCALL, *tok);
-		tok += 2;
 
-		ast_ptr* arg_ptr = &result->child;
+	// Recursive decent parsing with precedence climbing
+	// with a little help from https://eli.thegreenplace.net/2012/08/02/parsing-expressions-by-precedence-climbing
 
-		int argc = 0;
-		for (;;) {
-			*arg_ptr = expression(tok, last_err);
-			if (!*arg_ptr) return nullptr;
+	//    a single value                  ex. 5.3  or  x
+	// or an expression in parentheses    ex. (-x^3 + 5)
+	// or a function call                 ex. abs(x+3)
+	// any of these can be preceded by a unary minus  -5.3 or -x
+	ast_ptr atom () {
+		ast_ptr result;
+		if (tok->type == T_PAREN_OPEN) {
+			tok++;
 
-			argc++;
-			arg_ptr = &(*arg_ptr)->next;
+			result = expression();
+			if (!result) return nullptr;
 
-			if (!(tok->type == T_COMMA || tok->type == T_PAREN_CLOSE)) {
-				*last_err = "syntax error, ',' or ')' expected!";
+			if (tok->type != T_PAREN_CLOSE) {
+				last_err = "syntax error, ')' expected!";
 				return nullptr;
 			}
-			if (tok->type == T_PAREN_CLOSE)
-				break;
 			tok++;
 		}
-		tok++;
+		else if (tok[0].type == T_IDENTIFIER && tok[1].type == T_PAREN_OPEN) {
+			// function call
+			result = ast_node(OP_FUNCCALL, *tok);
+			tok += 2;
 
-		result->op.argc = argc;
-	}
-	else {
-		OPType type;
-		float value = 0;
+			ast_ptr* arg_ptr = &result->child;
 
-		if      (tok->type == T_LITERAL   ) {
-			type = OP_VALUE;
-			value = tok->value;
-		}
-		else if (tok->type == T_IDENTIFIER) {
-			if (lookup_constant((std::string_view)*tok, &value)) {
-				type = OP_VALUE;
-			} else {
-				type = OP_VARIABLE;
+			int argc = 0;
+			for (;;) {
+				*arg_ptr = expression();
+				if (!*arg_ptr) return nullptr;
+
+				argc++;
+				arg_ptr = &(*arg_ptr)->next;
+
+				if (!(tok->type == T_COMMA || tok->type == T_PAREN_CLOSE)) {
+					last_err = "syntax error, ',' or ')' expected!";
+					return nullptr;
+				}
+				if (tok->type == T_PAREN_CLOSE)
+					break;
+				tok++;
 			}
+			tok++;
+
+			result->op.argc = argc;
 		}
 		else {
-			*last_err = "syntax error, number or variable expected!";
+			OPType type;
+			float value = 0;
+
+			if      (tok->type == T_LITERAL   ) {
+				type = OP_VALUE;
+				value = tok->value;
+			}
+			else if (tok->type == T_IDENTIFIER) {
+				if (lookup_constant((std::string_view)*tok, &value)) {
+					type = OP_VALUE;
+				} else {
+					type = OP_VARIABLE;
+				}
+			}
+			else {
+				last_err = "syntax error, number or variable expected!";
+				return nullptr;
+			}
+
+			result = ast_node(type, *tok);
+			result->op.value = value;
+
+			tok++;
+		}
+		return result;
+	}
+
+	// a series of atoms seperated by binary operators (of precedence higher or equal than min_prec)
+	// ex. -x^(y+3) + 5
+	// note that the (y+3) is an atom, which happens to be a sub-expression
+	// expression calls itself recursively with increasing min_precedences to generate operators in the correct order (precedence climbing algorithm)
+	inline ast_ptr expression (int min_prec = 0) {
+
+		ast_ptr unary_minus = nullptr;
+		if      (tok->type == T_MINUS) unary_minus = ast_node(OP_UNARY_NEGATE, *tok++);
+		else if (tok->type == T_PLUS ) tok++; // skip, since unary plus is no-op
+		int unary_prec = 0;
+
+		ast_ptr lhs = atom();
+		if (!lhs) return nullptr;
+
+		for (;;) {
+			if (!is_binary_op(tok->type))
+				break;
+
+			int  prec  = get_binary_op_precedence(   tok->type);
+			auto assoc = get_binary_op_associativity(tok->type);
+
+			if (prec < min_prec)
+				break;
+
+			if (unary_minus && unary_prec >= prec) {
+				unary_minus->child = std::move(lhs);
+				lhs = std::move(unary_minus);
+			}
+
+			auto op_type = (OPType)(tok->type + (OP_ADD-T_PLUS));
+			ast_ptr op = ast_node(op_type, *tok);
+			tok++;
+
+			ast_ptr rhs = expression(assoc == LEFT_ASSOC ? prec+1 : prec);
+			if (!rhs) return nullptr;
+
+			lhs->next = std::move(rhs);
+			op->child = std::move(lhs);
+
+			lhs = std::move(op);
+		}
+
+		if (unary_minus) {
+			unary_minus->child = std::move(lhs);
+			return unary_minus;
+		}
+		return lhs;
+	}
+
+	inline ast_ptr parse_equation () {
+		ZoneScoped;
+
+		ast_ptr root = expression();
+		if (!root) return nullptr;
+	
+		if (tok->type == T_PAREN_CLOSE) {
+			last_err = "syntax error, ')' without matching '('!";
+			return nullptr;
+		}
+		if (tok->type != T_EOI) {
+			last_err = "syntax error, end of input expected!";
 			return nullptr;
 		}
 
-		result = ast_node(type, *tok);
-		result->op.value = value;
-
-		tok++;
+		return root;
 	}
-	return result;
-}
-
-// a series of atoms seperated by binary operators (of precedence higher or equal than min_prec)
-// ex. -x^(y+3) + 5
-// note that the (y+3) is an atom, which happens to be a sub-expression
-// expression calls itself recursively with increasing min_precedences to generate operators in the correct order (precedence climbing algorithm)
-inline ast_ptr expression (Token*& tok, std::string* last_err, int min_prec) {
-
-	ast_ptr unary_minus = nullptr;
-	if      (tok->type == T_MINUS) unary_minus = ast_node(OP_UNARY_NEGATE, *tok++);
-	else if (tok->type == T_PLUS ) tok++; // skip, since unary plus is no-op
-	int unary_prec = 0;
-
-	ast_ptr lhs = atom(tok, last_err);
-	if (!lhs) return nullptr;
-
-	for (;;) {
-		if (!is_binary_op(tok->type))
-			break;
-
-		int  prec  = get_binary_op_precedence(   tok->type);
-		auto assoc = get_binary_op_associativity(tok->type);
-
-		if (prec < min_prec)
-			break;
-
-		if (unary_minus && unary_prec >= prec) {
-			unary_minus->child = std::move(lhs);
-			lhs = std::move(unary_minus);
-		}
-
-		auto op_type = (OPType)(tok->type + (OP_ADD-T_PLUS));
-		ast_ptr op = ast_node(op_type, *tok);
-		tok++;
-
-		ast_ptr rhs = expression(tok, last_err, assoc == LEFT_ASSOC ? prec+1 : prec);
-		if (!rhs) return nullptr;
-
-		lhs->next = std::move(rhs);
-		op->child = std::move(lhs);
-
-		lhs = std::move(op);
-	}
-
-	if (unary_minus) {
-		unary_minus->child = std::move(lhs);
-		return unary_minus;
-	}
-	return lhs;
-}
-
-inline ast_ptr parse_equation (Token* tokens, std::string* last_err) {
-	Token* tok = tokens;
-
-	ast_ptr root = expression(tok, last_err);
-	if (!root) return nullptr;
-	
-	if (tok->type == T_PAREN_CLOSE) {
-		*last_err = "syntax error, ')' without matching '('!";
-		return nullptr;
-	}
-	if (tok->type != T_EOI) {
-		*last_err = "syntax error, end of input expected!";
-		return nullptr;
-	}
-
-	return root;
-}
+};

@@ -60,6 +60,8 @@ struct Token {
 };
 
 bool tokenize (const char* str, std::vector<Token>* tok, std::string* err_msg) {
+	ZoneScoped;
+
 	using namespace parse;
 
 	const char* cur = str;

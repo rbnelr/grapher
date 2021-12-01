@@ -19,8 +19,25 @@ float mymod (float a, float b) {
 	return val;
 }
 
+#define ARGCHECK(funcname, expected_argc) do { \
+	if (argc != expected_argc) { \
+		*errstr = funcname " takes " TO_STRING(expected_argc) " argument!"; \
+		return false; \
+	} \
+} while (false)
+
+struct ExecState;
+
+typedef bool (*std_function) (int argc, float* args, float* result, const char** errstr);
+typedef bool (*std_angle_function) (ExecState& state, int argc, float* args, float* result, const char** errstr);
+
+struct Function {
+	void* func_ptr;
+	bool angle_func = false;
+};
+
 struct ExecState {
-	
+
 	struct Variables {
 		float x;
 
@@ -44,30 +61,39 @@ struct ExecState {
 	float   to_deg_y;
 };
 
-#define ARGCHECK(funcname, expected_argc) \
-	if (argc != expected_argc) { \
-		*errstr = funcname " takes " TO_STRING(expected_argc) " argument!"; \
-		return false; \
-	}
-
-inline bool exec_sqrt (int argc, float* args, float* result, const char** errstr) {
-	ARGCHECK("sqrt", 1)
+inline bool exec_sqrt  (int argc, float* args, float* result, const char** errstr) {
+	ARGCHECK("sqrt", 1);
 	*result = sqrtf(args[0]);
 	return true;
 }
-inline bool exec_abs (int argc, float* args, float* result, const char** errstr) {
-	ARGCHECK("abs", 1)
+inline bool exec_abs   (int argc, float* args, float* result, const char** errstr) {
+	ARGCHECK("abs", 1);
 	*result = fabsf(args[0]);
 	return true;
 }
 
-inline bool exec_mod (int argc, float* args, float* result, const char** errstr) {
-	ARGCHECK("mod", 2)
+inline bool exec_mod   (int argc, float* args, float* result, const char** errstr) {
+	ARGCHECK("mod", 2);
 	*result = mymod(args[0], args[1]);
 	return true;
 }
+inline bool exec_floor (int argc, float* args, float* result, const char** errstr) {
+	ARGCHECK("floor", 1);
+	*result = floorf(args[0]);
+	return true;
+}
+inline bool exec_ceil  (int argc, float* args, float* result, const char** errstr) {
+	ARGCHECK("ceil", 1);
+	*result = ceilf(args[0]);
+	return true;
+}
+inline bool exec_round (int argc, float* args, float* result, const char** errstr) {
+	ARGCHECK("round", 1);
+	*result = roundf(args[0]);
+	return true;
+}
 
-inline bool exec_min (int argc, float* args, float* result, const char** errstr) {
+inline bool exec_min   (int argc, float* args, float* result, const char** errstr) {
 	if (argc < 2) {
 		*errstr = "min() takes at least 2 argument!";
 		return false;
@@ -80,7 +106,7 @@ inline bool exec_min (int argc, float* args, float* result, const char** errstr)
 	*result = minf;
 	return true;
 }
-inline bool exec_max (int argc, float* args, float* result, const char** errstr) {
+inline bool exec_max   (int argc, float* args, float* result, const char** errstr) {
 	if (argc < 2) {
 		*errstr = "max() takes at least 2 argument!";
 		return false;
@@ -94,82 +120,82 @@ inline bool exec_max (int argc, float* args, float* result, const char** errstr)
 	return true;
 }
 inline bool exec_clamp (int argc, float* args, float* result, const char** errstr) {
-	ARGCHECK("clamp", 3)
+	ARGCHECK("clamp", 3);
 	*result = clamp(args[0], args[1], args[2]);
 	return true;
 }
 
 inline bool exec_sin (ExecState& state, int argc, float* args, float* result, const char** errstr) {
-	ARGCHECK("sin", 1)
+	ARGCHECK("sin", 1);
 	*result = sinf(args[0] * state.from_deg_x); // assume args[0] comes from x axis for now 
 	return true;
 }
 inline bool exec_cos (ExecState& state, int argc, float* args, float* result, const char** errstr) {
-	ARGCHECK("cos", 1)
+	ARGCHECK("cos", 1);
 	*result = cosf(args[0] * state.from_deg_x);
 	return true;
 }
 inline bool exec_tan (ExecState& state, int argc, float* args, float* result, const char** errstr) {
-	ARGCHECK("tan", 1)
+	ARGCHECK("tan", 1);
 	*result = tanf(args[0] * state.from_deg_x);
 	return true;
 }
 inline bool exec_asin (ExecState& state, int argc, float* args, float* result, const char** errstr) {
-	ARGCHECK("asin", 1)
+	ARGCHECK("asin", 1);
 	*result = asinf(args[0]) * state.to_deg_y; // assume result goes to y axis for now 
 	return true;
 }
 inline bool exec_acos (ExecState& state, int argc, float* args, float* result, const char** errstr) {
-	ARGCHECK("acos", 1)
+	ARGCHECK("acos", 1);
 	*result = acosf(args[0]) * state.to_deg_y;
 	return true;
 }
 inline bool exec_atan (ExecState& state, int argc, float* args, float* result, const char** errstr) {
-	ARGCHECK("atan", 1)
+	ARGCHECK("atan", 1);
 	*result = atanf(args[0]) * state.to_deg_y;
 	return true;
 }
 
+std::unordered_map<std::string_view, Function> std_functions {
+	{ "sqrt",  { (void*)&exec_sqrt  } },
+	{ "abs",   { (void*)&exec_abs   } },
+	{ "min",   { (void*)&exec_min   } },
+	{ "max",   { (void*)&exec_max   } },
+	{ "clamp", { (void*)&exec_clamp } },
+	{ "mod",   { (void*)&exec_mod   } },
+	{ "floor", { (void*)&exec_floor } },
+	{ "ceil",  { (void*)&exec_ceil  } },
+	{ "round", { (void*)&exec_round } },
 
+	{ "sin",   { (void*)&exec_sin  , true } },
+	{ "cos",   { (void*)&exec_cos  , true } },
+	{ "tan",   { (void*)&exec_tan  , true } },
+	{ "asin",  { (void*)&exec_asin , true } },
+	{ "acos",  { (void*)&exec_acos , true } },
+	{ "atan",  { (void*)&exec_atan , true } },
+};
+
+inline bool call_const_func (Operation& op, float* args, float* result, const char** errstr) {
+	auto it = std_functions.find(op.text);
+	if (it == std_functions.end() || it->second.angle_func)
+		return false;
+
+	auto func = (std_function)it->second.func_ptr;
+	return func(op.argc, args, result, errstr);
+}
 inline bool call_func (ExecState& state, Operation& op, float* args, float* result, const char** errstr) {
-	
-	if      (op.text == "sqrt")  return exec_sqrt (       op.argc, args, result, errstr);
-	else if (op.text == "abs")   return exec_abs  (       op.argc, args, result, errstr);
-	
-	else if (op.text == "min")   return exec_min  (       op.argc, args, result, errstr);
-	else if (op.text == "max")   return exec_max  (       op.argc, args, result, errstr);
-	else if (op.text == "clamp") return exec_clamp(       op.argc, args, result, errstr);
-
-	else if (op.text == "sin")   return exec_sin  (state, op.argc, args, result, errstr);
-	else if (op.text == "cos")   return exec_cos  (state, op.argc, args, result, errstr);
-	else if (op.text == "tan")   return exec_tan  (state, op.argc, args, result, errstr);
-	else if (op.text == "asin")  return exec_asin (state, op.argc, args, result, errstr);
-	else if (op.text == "acos")  return exec_acos (state, op.argc, args, result, errstr);
-	else if (op.text == "atan")  return exec_atan (state, op.argc, args, result, errstr);
-
-	else if (op.text == "mod")   return exec_mod  (       op.argc, args, result, errstr);
-
-	else {
+	auto it = std_functions.find(op.text);
+	if (it == std_functions.end()) {
 		*errstr = "unknown function!";
 		return false;
 	}
-}
-inline bool call_const_func (Operation& op, float* args, float* result, const char** errstr) {
 
-	if      (op.text == "sqrt")  return exec_sqrt (       op.argc, args, result, errstr);
-	else if (op.text == "abs")   return exec_abs  (       op.argc, args, result, errstr);
-
-	else if (op.text == "min")   return exec_min  (       op.argc, args, result, errstr);
-	else if (op.text == "max")   return exec_max  (       op.argc, args, result, errstr);
-	else if (op.text == "clamp") return exec_clamp(       op.argc, args, result, errstr);
-
-	// no trig functions due to rad / deg modes not allowing for constant folding
-
-	else if (op.text == "mod")   return exec_mod  (       op.argc, args, result, errstr);
-
-	else {
-		*errstr = "unknown function!";
-		return false;
+	if (it->second.angle_func) {
+		auto func = (std_angle_function)it->second.func_ptr;
+		return func(state, op.argc, args, result, errstr);
+	} else {
+		auto func = (std_function)it->second.func_ptr;
+		return func(       op.argc, args, result, errstr);
 	}
 }
 

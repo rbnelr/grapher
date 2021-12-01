@@ -39,14 +39,21 @@ struct Equation {
 			valid = false;
 			return;
 		}
+
+		BlockBumpAllocator allocator;
+		Parser parser = {
+			tokens.data(),
+			last_err,
+			allocator
+		};
 		
-		auto ast = parse_equation(tokens.data(), &last_err);
+		auto ast = parser.parse_equation();
 		if (ast == nullptr) {
 			valid = false;
 			return;
 		}
 
-		valid = generate_code(ast.get(), &ops, &last_err, optimize);
+		valid = generate_code(GET(ast), &ops, &last_err, optimize);
 
 		exec_valid = true;
 	}
@@ -98,37 +105,37 @@ struct Equations {
 	Equations () {
 		int coli = 0;
 
-		//add_equation("x");
-		//add_equation("-x");
-		//add_equation("(-x)");
-		//add_equation("(((-x)))");
-		//add_equation("abs(-x)" );
-		//add_equation("max(x, -x)");
+		add_equation("x");
+		add_equation("-x");
+		add_equation("(-x)");
+		add_equation("(((-x)))");
+		add_equation("abs(-x)" );
+		add_equation("max(x, -x)");
 
-		add_equation("-x+2");
-		add_equation("-x*2");
-		add_equation("-x^2");
-		
-		add_equation("-x+-2");
-		add_equation("-x*-2");
-		add_equation("-x^-2");
-
-		//add_equation("5^x");
-		//add_equation("10^x");
-		//add_equation("pi^x");
-		//add_equation("clamp(x/3, 0,1)");
-		//add_equation("sin(x)");
-		//add_equation("acos(x)");
-		//add_equation("1.3^sqrt(abs(x^2 + 5*x)) - 1");
-		//add_equation("x^4 + x^3 + x^2");
+		//add_equation("-x+2");
+		//add_equation("-x*2");
+		//add_equation("-x^2");
 		//
-		//add_equation("x^2 + -2/3 / sqrt(0.2)");
+		//add_equation("-x+-2");
+		//add_equation("-x*-2");
+		//add_equation("-x^-2");
 
-		//add_equation("a*b/c");
-		//add_equation("a-b/c");
-		//add_equation("a/b-c");
-		//add_equation("a/b-c/d");
-		//add_equation("a-b/c-d");
+		add_equation("5^x");
+		add_equation("10^x");
+		add_equation("pi^x");
+		add_equation("clamp(x/3, 0,1)");
+		add_equation("sin(x)");
+		add_equation("acos(x)");
+		add_equation("1.3^sqrt(abs(x^2 + 5*x)) - 1");
+		add_equation("x^4 + x^3 + x^2");
+		
+		add_equation("x^2 + -2/3 / sqrt(0.2)");
+
+		add_equation("a*b/c");
+		add_equation("a-b/c");
+		add_equation("a/b-c");
+		add_equation("a/b-c/d");
+		add_equation("a-b/c-d");
 	}
 
 	void drag_drop_equations (int src, int dst) {
@@ -225,8 +232,12 @@ struct Equations {
 		}
 
 		bool reparse = ImGui::Checkbox("codegen optimize", &Equation::optimize);
-		for (auto& eq : equations)
+		
+		reparse = true;
+		if (reparse) {
+			for (auto& eq : equations)
 			eq.parse();
+		}
 
 		ImGui::PopID();
 	}
