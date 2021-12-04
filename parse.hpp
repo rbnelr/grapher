@@ -159,8 +159,42 @@ inline bool lookup_constant (std::string_view const& name, float* out) {
 	return true;
 }
 
-struct Parser {
+struct EquationDef {
+	// false: 'f(x) =' syntax  ->  callable via f(x), f will be a syntax error
+	//  true: 'f    =' syntax  ->  can get value via f, f(x) will be a syntax error
+	bool                            is_variable;
+
+	std::string_view                name;
+	std::vector< std::string_view > args;
+
+	std::unordered_map<std::string_view, int> arg_map; // argument name to argument position map
+
+	void create_arg_map () {
+		for (int i=0; i<(int)args.size(); ++i) {
+			arg_map.emplace(args[i], i);
+		}
+	}
+};
+
+struct TokenState {
 	Token*      tok;
+
+	TokenType peek (int lookahead=0) {
+		return tok[lookahead].type;
+	}
+	Token& get () {
+		return *tok++;
+	}
+	bool eat (TokenType type) {
+		if (tok->type != type)
+			return false;
+		tok++;
+		return true;
+	}
+};
+
+struct Parser {
+	TokenState tok;
 
 	std::string&        last_err;
 	BlockBumpAllocator& allocator;
@@ -187,42 +221,44 @@ struct Parser {
 	// any of these can be preceded by a unary minus  -5.3 or -x
 	ast_ptr atom () {
 		ast_ptr result;
-		if (tok->type == T_PAREN_OPEN) {
-			tok++;
-
+		if (tok.eat(T_PAREN_OPEN)) {
 			result = expression();
 			if (!result) return nullptr;
 
-			if (tok->type != T_PAREN_CLOSE) {
+			if (!tok.eat(T_PAREN_CLOSE)) {
 				last_err = "syntax error, ')' expected!";
 				return nullptr;
 			}
-			tok++;
 		}
-		else if (tok[0].type == T_IDENTIFIER && tok[1].type == T_PAREN_OPEN) {
+		else if (tok.peek(0) == T_IDENTIFIER && tok.peek(1) == T_PAREN_OPEN) {
 			// function call
-			result = ast_node(OP_FUNCCALL, *tok);
-			tok += 2;
+			result = ast_node(OP_FUNCCALL, tok.get());
+			tok.get(); // T_PAREN_OPEN
 
 			ast_ptr* arg_ptr = &result->child;
 
 			int argc = 0;
-			for (;;) {
-				*arg_ptr = expression();
-				if (!*arg_ptr) return nullptr;
 
-				argc++;
-				arg_ptr = &(*arg_ptr)->next;
+			if (tok.eat(T_PAREN_CLOSE)) {
+				// 0 args
+			} else {
+				for (;;) {
+					*arg_ptr = expression();
+					if (!*arg_ptr) return nullptr;
 
-				if (!(tok->type == T_COMMA || tok->type == T_PAREN_CLOSE)) {
-					last_err = "syntax error, ',' or ')' expected!";
-					return nullptr;
+					argc++;
+					arg_ptr = &(*arg_ptr)->next;
+
+					if (tok.eat(T_COMMA)) {
+						continue;
+					} else if (tok.eat(T_PAREN_CLOSE)) {
+						break;
+					} else {
+						last_err = "syntax error, ',' or ')' expected!";
+						return nullptr;
+					}
 				}
-				if (tok->type == T_PAREN_CLOSE)
-					break;
-				tok++;
 			}
-			tok++;
 
 			result->op.argc = argc;
 		}
@@ -230,12 +266,13 @@ struct Parser {
 			OPType type;
 			float value = 0;
 
-			if      (tok->type == T_LITERAL   ) {
+			auto& t = tok.get();
+			if      (t.type == T_LITERAL   ) {
 				type = OP_VALUE;
-				value = tok->value;
+				value = t.value;
 			}
-			else if (tok->type == T_IDENTIFIER) {
-				if (lookup_constant((std::string_view)*tok, &value)) {
+			else if (t.type == T_IDENTIFIER) {
+				if (lookup_constant((std::string_view)t, &value)) {
 					type = OP_VALUE;
 				} else {
 					type = OP_VARIABLE;
@@ -246,10 +283,8 @@ struct Parser {
 				return nullptr;
 			}
 
-			result = ast_node(type, *tok);
+			result = ast_node(type, t);
 			result->op.value = value;
-
-			tok++;
 		}
 		return result;
 	}
@@ -258,22 +293,23 @@ struct Parser {
 	// ex. -x^(y+3) + 5
 	// note that the (y+3) is an atom, which happens to be a sub-expression
 	// expression calls itself recursively with increasing min_precedences to generate operators in the correct order (precedence climbing algorithm)
-	inline ast_ptr expression (int min_prec = 0) {
+	ast_ptr expression (int min_prec = 0) {
 
 		ast_ptr unary_minus = nullptr;
-		if      (tok->type == T_MINUS) unary_minus = ast_node(OP_UNARY_NEGATE, *tok++);
-		else if (tok->type == T_PLUS ) tok++; // skip, since unary plus is no-op
+		if      (tok.peek() == T_MINUS) unary_minus = ast_node(OP_UNARY_NEGATE, tok.get());
+		else if (tok.peek() == T_PLUS ) tok.get(); // skip, since unary plus is no-op
 		int unary_prec = 0;
 
 		ast_ptr lhs = atom();
 		if (!lhs) return nullptr;
 
 		for (;;) {
-			if (!is_binary_op(tok->type))
+			auto op_tok = tok.peek();
+			if (!is_binary_op(op_tok))
 				break;
 
-			int  prec  = get_binary_op_precedence(   tok->type);
-			auto assoc = get_binary_op_associativity(tok->type);
+			int  prec  = get_binary_op_precedence(   op_tok);
+			auto assoc = get_binary_op_associativity(op_tok);
 
 			if (prec < min_prec)
 				break;
@@ -283,9 +319,8 @@ struct Parser {
 				lhs = std::move(unary_minus);
 			}
 
-			auto op_type = (OPType)(tok->type + (OP_ADD-T_PLUS));
-			ast_ptr op = ast_node(op_type, *tok);
-			tok++;
+			auto op_type = (OPType)(op_tok + (OP_ADD-T_PLUS));
+			ast_ptr op = ast_node(op_type, tok.get());
 
 			ast_ptr rhs = expression(assoc == LEFT_ASSOC ? prec+1 : prec);
 			if (!rhs) return nullptr;
@@ -303,21 +338,70 @@ struct Parser {
 		return lhs;
 	}
 
-	inline ast_ptr parse_equation () {
+	bool parse_definition (EquationDef* def) {
+		// where we return false it would usually be a syntax error if we were sure this was a function definition
+		// but could still be the rhs expression
+		// the problem is that "f(x,y) = " is abbigous with "f(x,y)" -> only the '=' tells us the previous tokes were a function def
+		auto cur_tok = tok;
+
+		if (cur_tok.peek() != T_IDENTIFIER) {
+			def->is_variable = false;
+			def->args = {"x"};
+			return false;
+		}
+
+		def->name = (std::string_view)cur_tok.get();
+
+		if (cur_tok.eat(T_PAREN_OPEN)) {
+			def->is_variable = false;
+			
+			while (!cur_tok.eat(T_PAREN_CLOSE)) {
+				if (cur_tok.peek() != T_IDENTIFIER)
+					return false; // syntax error, expected argument identifier
+
+				def->args.emplace_back( (std::string_view)cur_tok.get() );
+
+				if (cur_tok.eat(T_COMMA)) {
+					continue;
+				} else if (cur_tok.eat(T_PAREN_CLOSE)) {
+					break;
+				} else {
+					return false; // syntax error, ',' or ')' expected!
+				}
+			}
+
+		} else {
+			def->is_variable = true;
+		}
+
+		if (!cur_tok.eat(T_EQUALS))
+			return false; // syntax error, expected '='
+
+		// success in parsing lhs, parse rhs after '=' next
+		tok = cur_tok;
+
+		return true;
+	}
+	bool parse_formula (ast_ptr* formula) {
+		*formula = expression();
+		if (!*formula) return false;
+
+		if (tok.peek() == T_PAREN_CLOSE) {
+			last_err = "syntax error, ')' without matching '('!";
+			return false;
+		}
+		if (tok.peek() != T_EOI) {
+			last_err = "syntax error, end of input expected!";
+			return false;
+		}
+		return true;
+	}
+
+	bool parse_equation (EquationDef* def, ast_ptr* formula) {
 		ZoneScoped;
 
-		ast_ptr root = expression();
-		if (!root) return nullptr;
-	
-		if (tok->type == T_PAREN_CLOSE) {
-			last_err = "syntax error, ')' without matching '('!";
-			return nullptr;
-		}
-		if (tok->type != T_EOI) {
-			last_err = "syntax error, end of input expected!";
-			return nullptr;
-		}
+		parse_definition(def);
 
-		return root;
+		return parse_formula(formula);
 	}
 };

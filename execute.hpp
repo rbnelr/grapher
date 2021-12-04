@@ -28,37 +28,42 @@ float mymod (float a, float b) {
 
 struct ExecState;
 
-typedef bool (*std_function) (int argc, float* args, float* result, const char** errstr);
-typedef bool (*std_angle_function) (ExecState& state, int argc, float* args, float* result, const char** errstr);
-
-struct Function {
-	void* func_ptr;
-	bool angle_func = false;
-};
-
-struct ExecState {
-
-	struct Variables {
-		float x;
-
-		bool lookup (std::string_view const& name, float* out) {
-			if (name == "x") {
-				*out = x;
-				return true;
-			}
-
-			return false;
-		}
-	};
-
-	Variables vars;
-
+struct DegreeMode {
 	// if axis X in deg mode -> (2*PI)/360 else 1
 	// -> for  angle -> scalar  funcs (eg. sin)
 	float from_deg_x;
 	// if axis Y in deg mode -> 360/(2*PI) else 1
 	// -> for  scalar -> angle  funcs (eg. asin)
 	float   to_deg_y;
+};
+
+struct ExecState {
+
+	DegreeMode deg_mode;
+
+	// the inputs of this function evaluation
+	std::unordered_map<std::string_view, int>* arg_map;
+	std::vector<float> arg_values;
+	
+	// variables that are constant over the function
+	std::unordered_map<std::string_view, float> var_values;
+
+	bool lookup_var (std::string_view const& name, float* value) {
+		auto arg_i = arg_map->find(name);
+		if (arg_i != arg_map->end()) {
+			assert(arg_i->second >= 0 && arg_i->second < (int)arg_values.size());
+			*value = arg_values[arg_i->second];
+			return true;
+		}
+		
+		auto var = var_values.find(name);
+		if (var != var_values.end()) {
+			*value = var->second;
+			return true;
+		}
+		
+		return false;
+	}
 };
 
 inline bool exec_sqrt  (int argc, float* args, float* result, const char** errstr) {
@@ -125,36 +130,44 @@ inline bool exec_clamp (int argc, float* args, float* result, const char** errst
 	return true;
 }
 
-inline bool exec_sin (ExecState& state, int argc, float* args, float* result, const char** errstr) {
+inline bool exec_sin  (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr) {
 	ARGCHECK("sin", 1);
-	*result = sinf(args[0] * state.from_deg_x); // assume args[0] comes from x axis for now 
+	*result = sinf(args[0] * deg.from_deg_x); // assume args[0] comes from x axis for now 
 	return true;
 }
-inline bool exec_cos (ExecState& state, int argc, float* args, float* result, const char** errstr) {
+inline bool exec_cos  (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr) {
 	ARGCHECK("cos", 1);
-	*result = cosf(args[0] * state.from_deg_x);
+	*result = cosf(args[0] * deg.from_deg_x);
 	return true;
 }
-inline bool exec_tan (ExecState& state, int argc, float* args, float* result, const char** errstr) {
+inline bool exec_tan  (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr) {
 	ARGCHECK("tan", 1);
-	*result = tanf(args[0] * state.from_deg_x);
+	*result = tanf(args[0] * deg.from_deg_x);
 	return true;
 }
-inline bool exec_asin (ExecState& state, int argc, float* args, float* result, const char** errstr) {
+inline bool exec_asin (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr) {
 	ARGCHECK("asin", 1);
-	*result = asinf(args[0]) * state.to_deg_y; // assume result goes to y axis for now 
+	*result = asinf(args[0]) * deg.to_deg_y; // assume result goes to y axis for now 
 	return true;
 }
-inline bool exec_acos (ExecState& state, int argc, float* args, float* result, const char** errstr) {
+inline bool exec_acos (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr) {
 	ARGCHECK("acos", 1);
-	*result = acosf(args[0]) * state.to_deg_y;
+	*result = acosf(args[0]) * deg.to_deg_y;
 	return true;
 }
-inline bool exec_atan (ExecState& state, int argc, float* args, float* result, const char** errstr) {
+inline bool exec_atan (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr) {
 	ARGCHECK("atan", 1);
-	*result = atanf(args[0]) * state.to_deg_y;
+	*result = atanf(args[0]) * deg.to_deg_y;
 	return true;
 }
+
+typedef bool (*std_function) (int argc, float* args, float* result, const char** errstr);
+typedef bool (*std_angle_function) (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr);
+
+struct Function {
+	void* func_ptr;
+	bool angle_func = false;
+};
 
 std::unordered_map<std::string_view, Function> std_functions {
 	{ "sqrt",  { (void*)&exec_sqrt  } },
@@ -183,20 +196,22 @@ inline bool call_const_func (Operation& op, float* args, float* result, const ch
 	auto func = (std_function)it->second.func_ptr;
 	return func(op.argc, args, result, errstr);
 }
-inline bool call_func (ExecState& state, Operation& op, float* args, float* result, const char** errstr) {
+
+inline bool call_function (ExecState const& state, Operation& op, float* args, float* result, const char** errstr) {
 	auto it = std_functions.find(op.text);
-	if (it == std_functions.end()) {
-		*errstr = "unknown function!";
-		return false;
+	if (it != std_functions.end()) {
+
+		if (it->second.angle_func) {
+			auto func = (std_angle_function)it->second.func_ptr;
+			return func(state.deg_mode, op.argc, args, result, errstr);
+		} else {
+			auto func = (std_function)it->second.func_ptr;
+			return func(op.argc, args, result, errstr);
+		}
 	}
 
-	if (it->second.angle_func) {
-		auto func = (std_angle_function)it->second.func_ptr;
-		return func(state, op.argc, args, result, errstr);
-	} else {
-		auto func = (std_function)it->second.func_ptr;
-		return func(       op.argc, args, result, errstr);
-	}
+	*errstr = "unknown function!";
+	return false;
 }
 
 bool execute (ExecState& state, std::vector<Operation>& ops, float* result, std::string* last_err) {
@@ -219,8 +234,8 @@ bool execute (ExecState& state, std::vector<Operation>& ops, float* result, std:
 			} break;
 
 			case OP_VARIABLE: {
-				if (!state.vars.lookup(op.text, &value)) {
-					errstr = "vars.lookup() failed!";
+				if (!state.lookup_var(op.text, &value)) {
+					errstr = "lookup_var() failed!";
 					goto error;
 				}
 			} break;
@@ -232,7 +247,7 @@ bool execute (ExecState& state, std::vector<Operation>& ops, float* result, std:
 				}
 
 				stack_idx -= op.argc;
-				if (!call_func(state, op, &stack[stack_idx], &value, &errstr))
+				if (!call_function(state, op, &stack[stack_idx], &value, &errstr))
 					goto error;
 
 			} break;

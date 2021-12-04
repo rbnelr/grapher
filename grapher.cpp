@@ -487,23 +487,23 @@ struct App : public IApp {
 		ZoneScoped;
 
 		ExecState state;
-		state.from_deg_x = axes[0].units->deg ? DEG_TO_RAD : 1;
-		state.to_deg_y   = axes[1].units->deg ? RAD_TO_DEG : 1;
+		state.deg_mode.from_deg_x = axes[0].units->deg ? DEG_TO_RAD : 1;
+		state.deg_mode.to_deg_y   = axes[1].units->deg ? RAD_TO_DEG : 1;
 
-		auto eval = [&] (Equation& eq, float x, float* result) -> bool {
-			state.vars.x = x;
-			return eq.evaluate(state, x, result);
-		};
+		std::vector<int> sorted_equations;
+		equations.dependency_sort(&sorted_equations);
 
+		// Plot functions by evaluating them for all desired x values
+		// and handle curve hover points
 		bool dbg = ImGui::TreeNode("Debug Equations");
 
 		eq_lines.resize(equations.equations.size());
 
 		float2 cursor = I.cursor_pos_bottom_up;
 
-		float nearest_dist = INF;
+		float  nearest_dist = INF;
 		float2 nearest_point;
-		int nearest_eq = -1;
+		int    nearest_eq = -1;
 
 		auto cursor_select_line = [&] (int eq_i, float2 a, float2 b) {
 			if (clicked_eq >= 0 && eq_i != clicked_eq)
@@ -529,32 +529,50 @@ struct App : public IApp {
 		float res = px2world.x * eq_res_px;
 		int start = floori(view0.x / res), end = ceili(view1.x / res);
 
-		for (int eq_i=0; eq_i<(int)equations.equations.size(); ++eq_i) {
+		for (int eq_i : sorted_equations) {
 			auto& eq = equations.equations[eq_i];
-			if (!eq.valid || !eq.enable) continue;
 
-			eq_lines[eq_i] = lines.begin_draw(eq.line_w);
+			if (dbg) {
+				dbg_equation(eq);
+				ImGui::Separator();
+			}
 
-			if (dbg) dbg_equation(eq);
+			// only plot functions with zero or one arguments (plot f(b) for convinience even though b!=x)
+			// don't plot f=5 for example
+			bool show = eq.enable && eq.valid && !eq.def.is_variable && eq.def.arg_map.size() <= 1;
+			if (!show) continue;
 
 			ZoneScopedN("draw equation");
 
+			state.arg_map = &eq.def.arg_map;
+			state.arg_values.resize(1);
+
+			auto eval = [&] (Equation& eq, float x, float* result) {
+				if (axes[0].units->log)
+					x = powf(10.0f, x);
+
+				state.arg_values[0] = x;
+				eq.evaluate(state, result);
+
+				if (axes[1].units->log)
+					*result = log10f(*result);
+
+			};
+
+			eq_lines[eq_i] = lines.begin_draw(eq.line_w);
+
+			if (!eq.exec_valid) continue;
+
 			float prev_x = (float)start * res;
 			float prev_y;
+			eval(eq, prev_x, &prev_y);
 
-			float func_x = axes[0].units->log ? powf(10.0f, prev_x) : prev_x;
-			bool exec_valid = eval(eq, func_x, &prev_y);
-
-			prev_y = axes[1].units->log ? log10f(prev_y) : prev_y;
-
-			for (int i=start+1; exec_valid && i<=end; ++i) {
+			for (int i=start+1; eq.exec_valid && i<=end; ++i) {
 				float plot_x = (float)i * res;
-				func_x = axes[0].units->log ? powf(10.0f, plot_x) : plot_x;
+				float plot_y;
+				eval(eq, plot_x, &plot_y);
 
-				float func_y;
-				exec_valid = eval(eq, func_x, &func_y);
-
-				float plot_y = axes[1].units->log ? log10f(func_y) : func_y;
+				if (!eq.exec_valid) break;
 
 				if (!isnan(prev_y) && !isnan(plot_y)) {
 					eq_lines[eq_i].vertex_count += lines.draw_line(float3(prev_x, prev_y, 0), float3(plot_x, plot_y, 0), eq.col);
@@ -578,8 +596,10 @@ struct App : public IApp {
 			float2 coord = nearest_point * px2world + view0;
 			circles.draw(float3(coord, 0), max(eq.line_w * 2.0f * 2.00f, 5.0f), eq.col * float4(0.8f,0.8f,0.8f, 1));
 
-			auto p = format_point(coord.x, coord.y);
-			text.draw_text(p.c_str(), text_size, float4(0.98f,0.98f,0.98f,1),
+			std::string str = eq.def.name.empty() ? "" : eq.def.name + "() : ";
+			str.append( format_point(coord.x, coord.y) );
+
+			text.draw_text(str, text_size, float4(0.98f,0.98f,0.98f,1),
 				map_text(float3(coord, 0), view), 0, ticks_px * 1.5f);
 
 			if (I.buttons[MOUSE_BUTTON_LEFT].went_down)
