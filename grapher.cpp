@@ -615,8 +615,9 @@ struct App : public IApp {
 			std::string str = eq.def.name.empty() ? "" : eq.def.name + "() : ";
 			str.append( format_point(coord.x, coord.y) );
 
+			float2 pos = cursor * px2world + view0;
 			text.draw_text(str, text_size, float4(0.98f,0.98f,0.98f,1),
-				map_text(float3(coord, 0), view), 0, ticks_px * 1.5f);
+				map_text(float3(pos, 0), view), 0, ticks_px * 1.8f);
 
 			if (I.buttons[MOUSE_BUTTON_LEFT].went_down)
 				clicked_eq = nearest_eq;
