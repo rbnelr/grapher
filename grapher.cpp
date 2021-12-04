@@ -353,6 +353,26 @@ struct App : public IApp {
 		return view;
 	}
 
+	std::string format_axis_tick (float coord, Axis& axis) {
+		// unit_str=""   with scale=1    -> 0  1  2  3  4  5  6  7    
+		// unit_str="pi" with scale=3.14 -> 0pi       1pi       2pi   
+		// unit_str=""   with scale=3.14 -> 0         3.14      6.28  
+		coord *= 1.0f / axis.units->scale;
+
+		if (axis.units->log) coord = powf(10.0f, coord);
+
+		return prints("%g%s", coord, axis.units->unit_str.c_str());
+	}
+	std::string format_point (float coord_x, float coord_y) {
+		coord_x *= 1.0f / axes[0].units->scale;
+		coord_y *= 1.0f / axes[1].units->scale;
+
+		if (axes[0].units->log) coord_x = powf(10.0f, coord_x);
+		if (axes[1].units->log) coord_y = powf(10.0f, coord_y);
+
+		return prints("(%.3f%s, %.3f%s)", coord_x, axes[0].units->unit_str.c_str(), coord_y, axes[1].units->unit_str.c_str());
+	}
+
 	void draw_background_grid (Input& I, View3D const& view) {
 		OGL_TRACE("background_grid");
 		ZoneScoped
@@ -387,14 +407,7 @@ struct App : public IApp {
 		float axis_label_text_px = text_size * 1.25f;
 		float2 ticks_text_padding = ticks_px * 1.5f;
 
-		auto draw_axis_tick_text = [&] (
-				View3D const& view, float val, float unit_scale, float x, float y, float2 const& align,
-				int axis=-1, const char* unit="", bool log=false) {
-			val *= unit_scale;
-			if (log)
-				val = powf(10.0f, val);
-
-			auto str = prints("%g%s", val, unit);
+		auto draw_axis_tick_text = [&] (View3D const& view, const char* str, float x, float y, float2 const& align, int axis=-1) {
 			auto ptext = text.prepare_text(str, ticks_text_px, col_ticks_text);
 
 			float2 pos_px = map_text(float3(x, y, 0), view);
@@ -408,63 +421,45 @@ struct App : public IApp {
 			text.offset_glyphs(ptext.idx, ptext.len, offset);
 		};
 
-		draw_axis_tick_text(view, 0, 1, 0,0, float2(1,0));
+		draw_axis_tick_text(view, "0", 0,0, float2(1,0));
 
 		float2 tick_sz = ticks_px * px2world;
 
 		{ // X
 			auto& axis = axes[0];
 			
-			{ // draw tick marks
-				const char* unit_str = axis.units->unit_str.c_str();
+			int start = floori(view0.x / axis.tick_step);
+			int   end =  ceili(view1.x / axis.tick_step);
 
-				// unit_str=""   with scale=1    -> 0  1  2  3  4  5  6  7    
-				// unit_str="pi" with scale=3.14 -> 0pi       1pi       2pi   
-				// unit_str=""   with scale=3.14 -> 0         3.14      6.28  
-				float text_unit_scale = axis.units->unit_str.empty() ? 1.0f : 1.0f / axis.units->scale;
+			for (int i=start; i<=end; ++i) {
+				for (int j=0; j<axis.subtick_count; ++j) {
+					float coord = ((float)i + axis.subticks[j].offs) * axis.tick_step;
+					if (coord == 0.0f) continue;
 
-				int start = floori(view0.x / axis.tick_step);
-				int   end =  ceili(view1.x / axis.tick_step);
+					if (axis.subticks[j].size >= 1.0f)
+						draw_axis_tick_text(view, format_axis_tick(coord, axis).c_str(), coord, 0, float2(0.5f, 0), 0);
 
-				for (int i=start; i<=end; ++i) {
-					for (int j=0; j<axis.subtick_count; ++j) {
-						float coord = ((float)i + axis.subticks[j].offs) * axis.tick_step;
-						if (coord == 0.0f) continue;
-
-						if (axis.subticks[j].size >= 1.0f)
-							draw_axis_tick_text(view, coord, text_unit_scale, coord, 0, float2(0.5f, 0), 0, unit_str, axis.units->log);
-
-						float sz = tick_sz.y * axis.subticks[j].size;
-						line_vc += lines.draw_line(float3(coord, -sz, 0), float3(coord, +sz, 0), axis.col);
-					}
+					float sz = tick_sz.y * axis.subticks[j].size;
+					line_vc += lines.draw_line(float3(coord, -sz, 0), float3(coord, +sz, 0), axis.col);
 				}
 			}
 		}
 		{ // Y
 			auto& axis = axes[1];
 
-			{ // draw tick marks
-				const char* unit_str = axis.units->unit_str.c_str();
+			int start = floori(view0.y / axis.tick_step);
+			int   end =  ceili(view1.y / axis.tick_step);
 
-				// unit_str=""   with scale=1    -> 0  1  2  3  4  5  6  7    
-				// unit_str="pi" with scale=3.14 -> 0pi       1pi       2pi   
-				// unit_str=""   with scale=3.14 -> 0         3.14      6.28  
-				float text_unit_scale = axis.units->unit_str.empty() ? 1.0f : 1.0f / axis.units->scale;
+			for (int i=start; i<=end; ++i) {
+				for (int j=0; j<axis.subtick_count; ++j) {
+					float coord = ((float)i + axis.subticks[j].offs) * axis.tick_step;
+					if (coord == 0.0f) continue;
 
-				int start = floori(view0.y / axis.tick_step);
-				int   end =  ceili(view1.y / axis.tick_step);
+					if (axis.subticks[j].size >= 1.0f)
+						draw_axis_tick_text(view, format_axis_tick(coord, axis).c_str(), 0, coord, float2(1, 0.5f), 1);
 
-				for (int i=start; i<=end; ++i) {
-					for (int j=0; j<axis.subtick_count; ++j) {
-						float coord = ((float)i + axis.subticks[j].offs) * axis.tick_step;
-						if (coord == 0.0f) continue;
-
-						if (axis.subticks[j].size >= 1.0f)
-							draw_axis_tick_text(view, coord, text_unit_scale, 0, coord, float2(1, 0.5f), 1, unit_str, axis.units->log);
-
-						float sz = tick_sz.x * axis.subticks[j].size;
-						line_vc += lines.draw_line(float3(-sz, coord, 0), float3(+sz, coord, 0), axis.col);
-					}
+					float sz = tick_sz.x * axis.subticks[j].size;
+					line_vc += lines.draw_line(float3(-sz, coord, 0), float3(+sz, coord, 0), axis.col);
 				}
 			}
 		}
@@ -580,19 +575,19 @@ struct App : public IApp {
 		if (nearest_dist < 20 || clicked_eq >= 0) {
 			auto& eq = equations.equations[nearest_eq];
 
-			float2 pos = nearest_point * px2world + view0;
-			circles.draw(float3(pos, 0), max(eq.line_w * 2.0f * 2.00f, 5.0f), eq.col * float4(0.8f,0.8f,0.8f, 1));
+			float2 coord = nearest_point * px2world + view0;
+			circles.draw(float3(coord, 0), max(eq.line_w * 2.0f * 2.00f, 5.0f), eq.col * float4(0.8f,0.8f,0.8f, 1));
 
-			auto p = prints("(%.3f, %.3f)", pos.x, pos.y);
+			auto p = format_point(coord.x, coord.y);
 			text.draw_text(p.c_str(), text_size, float4(0.98f,0.98f,0.98f,1),
-				map_text(float3(pos, 0), view), 0, ticks_px * 1.5f);
+				map_text(float3(coord, 0), view), 0, ticks_px * 1.5f);
 
 			if (I.buttons[MOUSE_BUTTON_LEFT].went_down)
 				clicked_eq = nearest_eq;
 			if (!I.buttons[MOUSE_BUTTON_LEFT].is_down)
 				clicked_eq = -1;
 
-			hover_point = pos;
+			hover_point = coord;
 			hover_eq = nearest_eq;
 		} else {
 			hover_eq = -1;
