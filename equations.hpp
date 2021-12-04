@@ -212,11 +212,11 @@ struct Equations {
 			return; // pretend invalid equations don't exist
 
 		if (visited[eq_i] > 0) {
-			if (visited[eq_i] >= 2 && eq.exec_valid) {
-				// circular dependency detected!
-				eq.exec_valid = false;
-				eq.last_err = "circular reference!";
-			}
+			//if (visited[eq_i] >= 2 && eq.exec_valid) {
+			//	// circular dependency detected!
+			//	eq.exec_valid = false;
+			//	eq.last_err = "circular reference!";
+			//}
 			return; // equation already visited, skip
 		}
 		visited[eq_i] = 2; // set to <currently visiting>

@@ -179,7 +179,8 @@ struct Evaluator {
 		float f;
 		int   i;
 	};
-	StackValue stack[STACK_SIZE];
+	//StackValue stack[STACK_SIZE];
+	std::vector<StackValue> stack = std::vector<StackValue>(STACK_SIZE);
 
 	bool lookup_arg (std::string_view const& name, float* value, EquationDef& funcdef) {
 		auto arg_i = funcdef.arg_map.find(name);
@@ -281,7 +282,7 @@ struct Evaluator {
 				} break;
 
 				case OP_UNARY_NEGATE: {
-					POP(1);;
+					POP(1);
 					float a = stack[stack_ptr].f;
 
 					value = -a;
@@ -317,27 +318,34 @@ struct Evaluator {
 		return nullptr;
 	}
 
-	bool execute (EquationDef& funcdef, std::vector<Operation>& ops, float x, float* result, std::string* last_err) {
+	const char* execute (EquationDef& funcdef, std::vector<Operation>& ops, float x, float* result) {
 		int argc = (int)funcdef.arg_map.size();
 		assert(argc <= 1);
 
 		stack_ptr = 0;
 		frame_ptr = 0;
 
-		if (argc == 1)
-			stack[stack_ptr++].f = x;
+		if (argc == 1) {
+			PUSH(x);
+		}
 
 		const char* err = execute(funcdef, ops);
-		if (err) {
-			*last_err = err;
-			return false;
-		}
+		if (err) return err;
 
 		assert(frame_ptr == 0);
 		assert(stack_ptr == argc + 1);
-		stack_ptr--;
+		POP(1);
 		*result = stack[stack_ptr].f;
 
+		return nullptr;
+	}
+
+	bool execute (EquationDef& funcdef, std::vector<Operation>& ops, float x, float* result, std::string* last_error) {
+		auto err = execute(funcdef, ops, x, result);
+		if (err) {
+			*last_error = err;
+			return false;
+		}
 		return true;
 	}
 };
