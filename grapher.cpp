@@ -490,13 +490,33 @@ struct App : public IApp {
 		state.deg_mode.from_deg_x = axes[0].units->deg ? DEG_TO_RAD : 1;
 		state.deg_mode.to_deg_y   = axes[1].units->deg ? RAD_TO_DEG : 1;
 
+		// sort variables such that dependencies are always first
 		std::vector<int> sorted_equations;
 		equations.dependency_sort(&sorted_equations);
 
-		// Plot functions by evaluating them for all desired x values
-		// and handle curve hover points
 		bool dbg = ImGui::TreeNode("Debug Equations");
 
+		for (int eq_i : sorted_equations) {
+			auto& eq = equations.equations[eq_i];
+
+			if (eq.def.is_variable) {
+				if (dbg) {
+					dbg_equation(eq);
+					ImGui::Separator();
+				}
+
+				float value;
+				eq.evaluate(state, &value);
+				if (eq.exec_valid)
+					state.var_values.emplace(eq.def.name, value);
+			} else {
+				if (eq.exec_valid && equations.name_map.find(eq.def.name) != equations.name_map.end()) // don't insert ambiguous names
+					state.functions.emplace(eq.def.name, ExecState::Function{ &eq.def, &eq.ops });
+			}
+		}
+
+		// Plot functions by evaluating them for all desired x values
+		// and handle curve hover points
 		eq_lines.resize(equations.equations.size());
 
 		float2 cursor = I.cursor_pos_bottom_up;
@@ -529,7 +549,7 @@ struct App : public IApp {
 		float res = px2world.x * eq_res_px;
 		int start = floori(view0.x / res), end = ceili(view1.x / res);
 
-		for (int eq_i : sorted_equations) {
+		for (int eq_i=0; eq_i<(int)equations.equations.size(); ++eq_i) {
 			auto& eq = equations.equations[eq_i];
 
 			if (dbg) {

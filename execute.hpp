@@ -48,6 +48,12 @@ struct ExecState {
 	// variables that are constant over the function
 	std::unordered_map<std::string_view, float> var_values;
 
+	struct Function {
+		EquationDef*                               def;
+		std::vector<Operation>*                    ops;
+	};
+	std::unordered_map<std::string_view, Function> functions;
+
 	bool lookup_var (std::string_view const& name, float* value) {
 		auto arg_i = arg_map->find(name);
 		if (arg_i != arg_map->end()) {
@@ -164,12 +170,12 @@ inline bool exec_atan (DegreeMode const& deg, int argc, float* args, float* resu
 typedef bool (*std_function) (int argc, float* args, float* result, const char** errstr);
 typedef bool (*std_angle_function) (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr);
 
-struct Function {
+struct StdFunction {
 	void* func_ptr;
 	bool angle_func = false;
 };
 
-std::unordered_map<std::string_view, Function> std_functions {
+std::unordered_map<std::string_view, StdFunction> std_functions {
 	{ "sqrt",  { (void*)&exec_sqrt  } },
 	{ "abs",   { (void*)&exec_abs   } },
 	{ "min",   { (void*)&exec_min   } },
@@ -197,6 +203,8 @@ inline bool call_const_func (Operation& op, float* args, float* result, const ch
 	return func(op.argc, args, result, errstr);
 }
 
+bool execute (ExecState& state, std::vector<Operation>& ops, float* result, std::string* last_err);
+
 inline bool call_function (ExecState const& state, Operation& op, float* args, float* result, const char** errstr) {
 	auto it = std_functions.find(op.text);
 	if (it != std_functions.end()) {
@@ -209,6 +217,27 @@ inline bool call_function (ExecState const& state, Operation& op, float* args, f
 			return func(op.argc, args, result, errstr);
 		}
 	}
+
+	auto funcit = state.functions.find(op.text);
+	if (funcit != state.functions.end()) {
+		auto& func = funcit->second;
+
+		if (op.argc != (int)func.def->arg_map.size()) {
+			*errstr = "function argument count does not match!";
+			return false;
+		}
+		
+		ExecState recurse_state;
+		recurse_state.functions = state.functions; // TODO: COPY! get rid of this
+		recurse_state.var_values = state.var_values; // TODO: COPY! get rid of this
+
+		recurse_state.arg_map = &func.def->arg_map;
+		recurse_state.arg_values.assign(args, args+op.argc);
+
+		std::string errstr; // TODO: don't ignore
+		return execute(recurse_state, *func.ops, result, &errstr);
+	}
+
 
 	*errstr = "unknown function!";
 	return false;

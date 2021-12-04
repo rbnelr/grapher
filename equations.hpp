@@ -136,6 +136,7 @@ struct Equations {
 		add_equation("f() = 4");
 		add_equation("f( = 5");
 		add_equation("f) = 6");
+		add_equation(" = 6");
 		add_equation("f(x,) = 6");
 		add_equation("f(x) = m*x + b + 0.2");
 		// ambiguous ref
@@ -207,8 +208,9 @@ struct Equations {
 		}
 	}
 
+
 	void recurse_dependency_sort (int eq_i, std::vector<int>& visited, std::vector<int>& sorted) {
-		
+
 		Equation& eq = equations[eq_i];
 		if (!eq.valid)
 			return; // pretend invalid equations don't exist
