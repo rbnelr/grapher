@@ -485,10 +485,10 @@ struct App : public IApp {
 
 	void draw_equations (Input& I, View3D const& view) {
 		ZoneScoped;
-
-		ExecState state;
-		state.deg_mode.from_deg_x = axes[0].units->deg ? DEG_TO_RAD : 1;
-		state.deg_mode.to_deg_y   = axes[1].units->deg ? RAD_TO_DEG : 1;
+		
+		Evaluator eval;
+		eval.deg_mode.from_deg_x = axes[0].units->deg ? DEG_TO_RAD : 1;
+		eval.deg_mode.to_deg_y   = axes[1].units->deg ? RAD_TO_DEG : 1;
 
 		// sort variables such that dependencies are always first
 		std::vector<int> sorted_equations;
@@ -506,12 +506,12 @@ struct App : public IApp {
 				}
 
 				float value;
-				eq.evaluate(state, &value);
+				eq.exec_valid = eval.execute(eq.def, eq.ops, 0, &value, &eq.last_err);
 				if (eq.exec_valid)
-					state.var_values.emplace(eq.def.name, value);
+					eval.var_values.emplace(eq.def.name, value);
 			} else {
 				if (eq.exec_valid && equations.name_map.find(eq.def.name) != equations.name_map.end()) // don't insert ambiguous names
-					state.functions.emplace(eq.def.name, ExecState::Function{ &eq.def, &eq.ops });
+					eval.functions.emplace(eq.def.name, Evaluator::Function{ &eq.def, &eq.ops });
 			}
 		}
 
@@ -564,15 +564,11 @@ struct App : public IApp {
 
 			ZoneScopedN("draw equation");
 
-			state.arg_map = &eq.def.arg_map;
-			state.arg_values.resize(1);
-
-			auto eval = [&] (Equation& eq, float x, float* result) {
+			auto eval_func = [&] (Equation& eq, float x, float* result) {
 				if (axes[0].units->log)
 					x = powf(10.0f, x);
 
-				state.arg_values[0] = x;
-				eq.evaluate(state, result);
+				eq.exec_valid = eval.execute(eq.def, eq.ops, x, result, &eq.last_err);
 
 				if (axes[1].units->log)
 					*result = log10f(*result);
@@ -585,12 +581,12 @@ struct App : public IApp {
 
 			float prev_x = (float)start * res;
 			float prev_y;
-			eval(eq, prev_x, &prev_y);
+			eval_func(eq, prev_x, &prev_y);
 
 			for (int i=start+1; eq.exec_valid && i<=end; ++i) {
 				float plot_x = (float)i * res;
 				float plot_y;
-				eval(eq, plot_x, &plot_y);
+				eval_func(eq, plot_x, &plot_y);
 
 				if (!eq.exec_valid) break;
 

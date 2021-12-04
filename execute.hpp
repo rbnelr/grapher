@@ -2,31 +2,11 @@
 #include "common.hpp"
 #include "parse.hpp"
 
-float mypow (float a, float b) {
-	//if (b == 2.0f) return a*a;
-	//if (b == 3.0f) return a*a*a;
-	//if (b == 4.0f) return (a*a)*(a*a);
-
-	return powf(a, b);
-}
-float mymod (float a, float b) {
-	float val = fmodf(a, b);
-	//if (b > 0.0f) if (a < 0.0f) val += b;
-	//else          if (a > 0.0f) val += b;
-	//
-	if (a*b < 0.0f) // differing sign
-		val += b;
-	return val;
-}
-
 #define ARGCHECK(funcname, expected_argc) do { \
 	if (argc != expected_argc) { \
-		*errstr = funcname " takes " TO_STRING(expected_argc) " argument!"; \
-		return false; \
+		return funcname " takes " TO_STRING(expected_argc) " argument!"; \
 	} \
 } while (false)
-
-struct ExecState;
 
 struct DegreeMode {
 	// if axis X in deg mode -> (2*PI)/360 else 1
@@ -37,144 +17,119 @@ struct DegreeMode {
 	float   to_deg_y;
 };
 
-struct ExecState {
+inline float mypow (float a, float b) {
+	//if (b == 2.0f) return a*a;
+	//if (b == 3.0f) return a*a*a;
+	//if (b == 4.0f) return (a*a)*(a*a);
 
-	DegreeMode deg_mode;
+	return powf(a, b);
+}
+inline float mymod (float a, float b) {
+	float val = fmodf(a, b);
+	//if (b > 0.0f) if (a < 0.0f) val += b;
+	//else          if (a > 0.0f) val += b;
+	//
+	if (a*b < 0.0f) // differing sign
+		val += b;
+	return val;
+}
 
-	// the inputs of this function evaluation
-	std::unordered_map<std::string_view, int>* arg_map;
-	std::vector<float> arg_values;
-	
-	// variables that are constant over the function
-	std::unordered_map<std::string_view, float> var_values;
-
-	struct Function {
-		EquationDef*                               def;
-		std::vector<Operation>*                    ops;
-	};
-	std::unordered_map<std::string_view, Function> functions;
-
-	bool lookup_var (std::string_view const& name, float* value) {
-		auto arg_i = arg_map->find(name);
-		if (arg_i != arg_map->end()) {
-			assert(arg_i->second >= 0 && arg_i->second < (int)arg_values.size());
-			*value = arg_values[arg_i->second];
-			return true;
-		}
-		
-		auto var = var_values.find(name);
-		if (var != var_values.end()) {
-			*value = var->second;
-			return true;
-		}
-		
-		return false;
-	}
-};
-
-inline bool exec_sqrt  (int argc, float* args, float* result, const char** errstr) {
+inline const char* exec_sqrt  (int argc, float* args, float* result, const char** errstr) {
 	ARGCHECK("sqrt", 1);
 	*result = sqrtf(args[0]);
-	return true;
+	return nullptr;
 }
-inline bool exec_abs   (int argc, float* args, float* result, const char** errstr) {
+inline const char* exec_abs   (int argc, float* args, float* result, const char** errstr) {
 	ARGCHECK("abs", 1);
 	*result = fabsf(args[0]);
-	return true;
+	return nullptr;
 }
 
-inline bool exec_mod   (int argc, float* args, float* result, const char** errstr) {
+inline const char* exec_mod   (int argc, float* args, float* result, const char** errstr) {
 	ARGCHECK("mod", 2);
 	*result = mymod(args[0], args[1]);
-	return true;
+	return nullptr;
 }
-inline bool exec_floor (int argc, float* args, float* result, const char** errstr) {
+inline const char* exec_floor (int argc, float* args, float* result, const char** errstr) {
 	ARGCHECK("floor", 1);
 	*result = floorf(args[0]);
-	return true;
+	return nullptr;
 }
-inline bool exec_ceil  (int argc, float* args, float* result, const char** errstr) {
+inline const char* exec_ceil  (int argc, float* args, float* result, const char** errstr) {
 	ARGCHECK("ceil", 1);
 	*result = ceilf(args[0]);
-	return true;
+	return nullptr;
 }
-inline bool exec_round (int argc, float* args, float* result, const char** errstr) {
+inline const char* exec_round (int argc, float* args, float* result, const char** errstr) {
 	ARGCHECK("round", 1);
 	*result = roundf(args[0]);
-	return true;
+	return nullptr;
 }
 
-inline bool exec_min   (int argc, float* args, float* result, const char** errstr) {
-	if (argc < 2) {
-		*errstr = "min() takes at least 2 argument!";
-		return false;
-	}
+inline const char* exec_min   (int argc, float* args, float* result, const char** errstr) {
+	if (argc < 2) return "min() takes at least 2 argument!";
 
 	float minf = args[0];
 	for (int i=1; i<argc; ++i)
 		minf = min(minf, args[i]);
 
 	*result = minf;
-	return true;
+	return nullptr;
 }
-inline bool exec_max   (int argc, float* args, float* result, const char** errstr) {
-	if (argc < 2) {
-		*errstr = "max() takes at least 2 argument!";
-		return false;
-	}
+inline const char* exec_max   (int argc, float* args, float* result, const char** errstr) {
+	if (argc < 2) return "max() takes at least 2 argument!";
 
 	float maxf = args[0];
 	for (int i=1; i<argc; ++i)
 		maxf = max(maxf, args[i]);
 
 	*result = maxf;
-	return true;
+	return nullptr;
 }
-inline bool exec_clamp (int argc, float* args, float* result, const char** errstr) {
+inline const char* exec_clamp (int argc, float* args, float* result, const char** errstr) {
 	ARGCHECK("clamp", 3);
 	*result = clamp(args[0], args[1], args[2]);
-	return true;
+	return nullptr;
 }
 
-inline bool exec_sin  (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr) {
+inline const char* exec_sin  (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr) {
 	ARGCHECK("sin", 1);
 	*result = sinf(args[0] * deg.from_deg_x); // assume args[0] comes from x axis for now 
-	return true;
+	return nullptr;
 }
-inline bool exec_cos  (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr) {
+inline const char* exec_cos  (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr) {
 	ARGCHECK("cos", 1);
 	*result = cosf(args[0] * deg.from_deg_x);
-	return true;
+	return nullptr;
 }
-inline bool exec_tan  (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr) {
+inline const char* exec_tan  (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr) {
 	ARGCHECK("tan", 1);
 	*result = tanf(args[0] * deg.from_deg_x);
-	return true;
+	return nullptr;
 }
-inline bool exec_asin (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr) {
+inline const char* exec_asin (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr) {
 	ARGCHECK("asin", 1);
 	*result = asinf(args[0]) * deg.to_deg_y; // assume result goes to y axis for now 
-	return true;
+	return nullptr;
 }
-inline bool exec_acos (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr) {
+inline const char* exec_acos (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr) {
 	ARGCHECK("acos", 1);
 	*result = acosf(args[0]) * deg.to_deg_y;
-	return true;
+	return nullptr;
 }
-inline bool exec_atan (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr) {
+inline const char* exec_atan (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr) {
 	ARGCHECK("atan", 1);
 	*result = atanf(args[0]) * deg.to_deg_y;
-	return true;
+	return nullptr;
 }
 
-typedef bool (*std_function) (int argc, float* args, float* result, const char** errstr);
-typedef bool (*std_angle_function) (DegreeMode const& deg, int argc, float* args, float* result, const char** errstr);
+typedef const char* (*std_function) (int argc, float* args, float* result);
+typedef const char* (*std_angle_function) (DegreeMode const& deg, int argc, float* args, float* result);
 
 struct StdFunction {
 	void* func_ptr;
 	bool angle_func = false;
 };
-
 std::unordered_map<std::string_view, StdFunction> std_functions {
 	{ "sqrt",  { (void*)&exec_sqrt  } },
 	{ "abs",   { (void*)&exec_abs   } },
@@ -194,155 +149,198 @@ std::unordered_map<std::string_view, StdFunction> std_functions {
 	{ "atan",  { (void*)&exec_atan , true } },
 };
 
-inline bool call_const_func (Operation& op, float* args, float* result, const char** errstr) {
+inline bool call_const_func (Operation& op, float* args, float* result) {
 	auto it = std_functions.find(op.text);
 	if (it == std_functions.end() || it->second.angle_func)
 		return false;
 
 	auto func = (std_function)it->second.func_ptr;
-	return func(op.argc, args, result, errstr);
+	return func(op.argc, args, result) != nullptr;
 }
 
-bool execute (ExecState& state, std::vector<Operation>& ops, float* result, std::string* last_err);
 
-inline bool call_function (ExecState const& state, Operation& op, float* args, float* result, const char** errstr) {
-	auto it = std_functions.find(op.text);
-	if (it != std_functions.end()) {
+struct Evaluator {
+	DegreeMode deg_mode;
 
-		if (it->second.angle_func) {
-			auto func = (std_angle_function)it->second.func_ptr;
-			return func(state.deg_mode, op.argc, args, result, errstr);
-		} else {
-			auto func = (std_function)it->second.func_ptr;
-			return func(op.argc, args, result, errstr);
-		}
-	}
+	// variables that are constant over the function
+	std::unordered_map<std::string_view, float> var_values;
 
-	auto funcit = state.functions.find(op.text);
-	if (funcit != state.functions.end()) {
-		auto& func = funcit->second;
+	struct Function {
+		EquationDef*                               def;
+		std::vector<Operation>*                    ops;
+	};
+	std::unordered_map<std::string_view, Function> functions;
 
-		if (op.argc != (int)func.def->arg_map.size()) {
-			*errstr = "function argument count does not match!";
-			return false;
-		}
-		
-		ExecState recurse_state;
-		recurse_state.functions = state.functions; // TODO: COPY! get rid of this
-		recurse_state.var_values = state.var_values; // TODO: COPY! get rid of this
+	int frame_ptr;
+	int stack_ptr;
 
-		recurse_state.arg_map = &func.def->arg_map;
-		recurse_state.arg_values.assign(args, args+op.argc);
-
-		std::string errstr; // TODO: don't ignore
-		return execute(recurse_state, *func.ops, result, &errstr);
-	}
-
-
-	*errstr = "unknown function!";
-	return false;
-}
-
-bool execute (ExecState& state, std::vector<Operation>& ops, float* result, std::string* last_err) {
 	static constexpr int STACK_SIZE = 64;
+	union StackValue {
+		float f;
+		int   i;
+	};
+	StackValue stack[STACK_SIZE];
 
-	float stack[STACK_SIZE];
-	int stack_idx = 0;
+	bool lookup_arg (std::string_view const& name, float* value, EquationDef& funcdef) {
+		auto arg_i = funcdef.arg_map.find(name);
+		if (arg_i == funcdef.arg_map.end())
+			return false;
 
-	const char* errstr;
+		assert(arg_i->second >= 0 && arg_i->second < (int)funcdef.arg_map.size());
+		assert(frame_ptr + arg_i->second < stack_ptr);
 
-	auto op_it  = ops.begin();
-	auto op_end = ops.end();
-	for (; op_it != op_end; ++op_it) {
-		auto& op = *op_it;
+		*value = stack[frame_ptr + arg_i->second].f;
 
-		float value;
-		switch (op.code) {
-			case OP_VALUE: {
-				value = op.value;
-			} break;
+		return true;
+	}
+	bool lookup_var (std::string_view const& name, float* value) {
+		auto var = var_values.find(name);
+		if (var == var_values.end())
+			return false;
+		*value = var->second;
+		return true;
+	}
 
-			case OP_VARIABLE: {
-				if (!state.lookup_var(op.text, &value)) {
-					errstr = "lookup_var() failed!";
-					goto error;
-				}
-			} break;
+#define PUSH(val) \
+	if (stack_ptr >= STACK_SIZE) return "stack overflow!"; \
+	stack[stack_ptr++].f = (val);
 
-			case OP_FUNCCALL: {
-				if (stack_idx < op.argc) {
-					errstr = "stack underflow!";
-					goto error;
-				}
+#define POP(N) \
+	if (stack_ptr < (N)) return "stack underflow!"; \
+	stack_ptr -= (N)
 
-				stack_idx -= op.argc;
-				if (!call_function(state, op, &stack[stack_idx], &value, &errstr))
-					goto error;
+	const char* call_function (Operation& op, float* result) {
+		auto it = std_functions.find(op.text);
+		if (it != std_functions.end()) {
 
-			} break;
+			POP(op.argc);
+			float* args = &stack[stack_ptr].f;
 
-			case OP_UNARY_NEGATE: {
-				//assert(stack_idx >= 1);
-				if (stack_idx < 1) {
-					errstr = "stack underflow!";
-					goto error;
-				}
-
-				stack_idx -= 1;
-				float a = stack[stack_idx];
-
-				value = -a;
-			} break;
-
-			case OP_ADD       :
-			case OP_SUBSTRACT :
-			case OP_MULTIPLY  :
-			case OP_DIVIDE    :
-			case OP_POW       : {
-				//assert(stack_idx >= 2);
-				if (stack_idx < 2) {
-					errstr = "stack underflow!";
-					goto error;
-				}
-
-				stack_idx -= 2;
-				float a = stack[stack_idx];
-				float b = stack[stack_idx+1];
-
-				switch (op.code) {
-					case OP_ADD       : value = a + b; break;
-					case OP_SUBSTRACT : value = a - b; break;
-					case OP_MULTIPLY  : value = a * b; break;
-					case OP_DIVIDE    : value = a / b; break;
-					case OP_POW       : value = mypow(a, b); break;
-					default: assert(false);
-				}
-			} break;
-
-			default: {
-				errstr = "unknown op type!";
-				goto error;
+			if (it->second.angle_func) {
+				auto func = (std_angle_function)it->second.func_ptr;
+				return func(deg_mode, op.argc, args, result);
+			} else {
+				auto func = (std_function)it->second.func_ptr;
+				return func(op.argc, args, result);
 			}
 		}
 
-		//assert(stack_idx < STACK_SIZE);
-		if (stack_idx >= STACK_SIZE) {
-			errstr = "stack overflow!";
-			goto error;
+		auto funcit = functions.find(op.text);
+		if (funcit != functions.end()) {
+			auto& func = funcit->second;
+
+			if (op.argc != (int)func.def->arg_map.size()) {
+				return "function argument count does not match!";
+			}
+
+			int return_ptr = frame_ptr; // remember our stack frame
+			frame_ptr = stack_ptr - op.argc; // stack frame of function is top of stack
+
+			auto res = execute(*func.def, *func.ops);
+			if (res) return res;
+
+			frame_ptr = return_ptr; // return to our stack frame
+			
+			POP(1);
+			*result = stack[stack_ptr].f;
+
+			POP(op.argc);
+
+			return nullptr;
 		}
 
-		stack[stack_idx++] = value;
+		return "unknown function!";
 	}
 
-	assert(stack_idx == 1);
-	*result = stack[0];
-	return true;
+	const char* execute (EquationDef& funcdef, std::vector<Operation>& ops) {
+		auto op_it  = ops.begin();
+		auto op_end = ops.end();
+		for (; op_it != op_end; ++op_it) {
+			auto& op = *op_it;
 
-error:
-	auto& code = *op_it;
-	*last_err = prints("%s\nop: %s text: ", errstr, OPType_str[code.code]) + code.text;
-	return false;
-}
+			float value;
+			switch (op.code) {
+				case OP_VALUE: {
+					value = op.value;
+				} break;
+
+				case OP_VARIABLE: {
+					if (lookup_arg(op.text, &value, funcdef)) {
+
+					} else if (lookup_var(op.text, &value)) {
+
+					} else {
+						return "lookup_var() failed!";
+					}
+				} break;
+
+				case OP_FUNCCALL: {
+					auto err = call_function(op, &value);
+					if (err) return err;
+
+				} break;
+
+				case OP_UNARY_NEGATE: {
+					POP(1);;
+					float a = stack[stack_ptr].f;
+
+					value = -a;
+				} break;
+
+				case OP_ADD       :
+				case OP_SUBSTRACT :
+				case OP_MULTIPLY  :
+				case OP_DIVIDE    :
+				case OP_POW       : {
+					POP(2);
+					float a = stack[stack_ptr].f;
+					float b = stack[stack_ptr+1].f;
+
+					switch (op.code) {
+						case OP_ADD       : value = a + b; break;
+						case OP_SUBSTRACT : value = a - b; break;
+						case OP_MULTIPLY  : value = a * b; break;
+						case OP_DIVIDE    : value = a / b; break;
+						case OP_POW       : value = mypow(a, b); break;
+						default: assert(false);
+					}
+				} break;
+
+				default: {
+					return "unknown op type!";
+				}
+			}
+
+			PUSH(value);
+		}
+
+		return nullptr;
+	}
+
+	bool execute (EquationDef& funcdef, std::vector<Operation>& ops, float x, float* result, std::string* last_err) {
+		int argc = (int)funcdef.arg_map.size();
+		assert(argc <= 1);
+
+		stack_ptr = 0;
+		frame_ptr = 0;
+
+		if (argc == 1)
+			stack[stack_ptr++].f = x;
+
+		const char* err = execute(funcdef, ops);
+		if (err) {
+			*last_err = err;
+			return false;
+		}
+
+		assert(frame_ptr == 0);
+		assert(stack_ptr == argc + 1);
+		stack_ptr--;
+		*result = stack[stack_ptr].f;
+
+		return true;
+	}
+};
 
 // eval as a string to quickly debug execution
 bool execute_str (std::vector<Operation>& ops, std::string* result) {

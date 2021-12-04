@@ -67,10 +67,6 @@ struct Equation {
 		valid = generate_code(GET_AST_PTR(formula), &ops, &last_err, optimize);
 	}
 
-	void evaluate (ExecState& state, float* result) {
-		exec_valid = execute(state, ops, result, &last_err);
-	}
-
 	std::string dbg_eval () {
 		std::string str;
 

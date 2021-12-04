@@ -26,12 +26,11 @@ inline bool constant_folding (ASTNode* node) {
 		return false;
 
 	float value;
-	const char* errstr;
 
 	switch (node->op.code) {
 		case OP_FUNCCALL: {
 			assert((int)values.size() == node->op.argc);
-			if (!call_const_func(node->op, values.data(), &value, &errstr))
+			if (call_const_func(node->op, values.data(), &value))
 				return false;
 		} break;
 
