@@ -222,7 +222,7 @@ struct Parser {
 	ast_ptr atom () {
 		ast_ptr result;
 		if (tok.eat(T_PAREN_OPEN)) {
-			result = expression();
+			result = expression(0);
 			if (!result) return nullptr;
 
 			if (!tok.eat(T_PAREN_CLOSE)) {
@@ -243,7 +243,7 @@ struct Parser {
 				// 0 args
 			} else {
 				for (;;) {
-					*arg_ptr = expression();
+					*arg_ptr = expression(0);
 					if (!*arg_ptr) return nullptr;
 
 					argc++;
@@ -293,15 +293,25 @@ struct Parser {
 	// ex. -x^(y+3) + 5
 	// note that the (y+3) is an atom, which happens to be a sub-expression
 	// expression calls itself recursively with increasing min_precedences to generate operators in the correct order (precedence climbing algorithm)
-	ast_ptr expression (int min_prec = 0) {
+	ast_ptr expression (int min_prec) {
 
 		ast_ptr unary_minus = nullptr;
 		if      (tok.peek() == T_MINUS) unary_minus = ast_node(OP_UNARY_NEGATE, tok.get());
 		else if (tok.peek() == T_PLUS ) tok.get(); // skip, since unary plus is no-op
-		int unary_prec = 0;
+		int unary_prec = 1;
 
 		ast_ptr lhs = atom();
 		if (!lhs) return nullptr;
+
+		if (unary_minus) {
+			min_prec = std::min(unary_prec, min_prec);
+
+			auto op_tok = tok.peek();
+			if (is_binary_op(op_tok) && unary_prec >= get_binary_op_precedence(op_tok)) {
+				unary_minus->child = std::move(lhs);
+				lhs = std::move(unary_minus);
+			}
+		}
 
 		for (;;) {
 			auto op_tok = tok.peek();
@@ -383,7 +393,7 @@ struct Parser {
 		return true;
 	}
 	bool parse_formula (ast_ptr* formula) {
-		*formula = expression();
+		*formula = expression(0);
 		if (!*formula) return false;
 
 		if (tok.peek() == T_PAREN_CLOSE) {

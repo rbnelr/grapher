@@ -127,35 +127,36 @@ struct Equations {
 	Equations () {
 		int coli = 0;
 
-		add_equation("3*x");
-		add_equation("f = 3");
-		add_equation("f() = 4");
-		add_equation("f( = 5");
-		add_equation("f) = 6");
-		add_equation(" = 6");
-		add_equation("f(x,) = 6");
-		add_equation("f(x) = m*x + b + 0.2");
-		// ambiguous ref
-		add_equation("k(x) = f");
-		// ref that has error
-		add_equation("u(x) = 7&3");
-		add_equation("v(x) = u(x)");
-		// circ ref
-		add_equation("e(x) = e(x)");
-		add_equation("r(x) = t(x)");
-		add_equation("t(x) = r(x)");
+		//add_equation("3*x");
+		//add_equation("f = 3");
+		//add_equation("f() = 4");
+		//add_equation("f( = 5");
+		//add_equation("f) = 6");
+		//add_equation(" = 6");
+		//add_equation("f(x,) = 6");
+		//add_equation("f(x) = m*x + b + 0.2");
+		//// ambiguous ref
+		//add_equation("k(x) = f");
+		//// ref that has error
+		//add_equation("u(x) = 7&3");
+		//add_equation("v(x) = u(x)");
+		//// circ ref
+		//add_equation("e(x) = e(x)");
+		//add_equation("r(x) = t(x)");
+		//add_equation("t(x) = r(x)");
+		//
+		//add_equation("g(x,m,b) = m*x + b");
+		//add_equation("h(x) = g(x, m,b)");
+		//add_equation("m = 0.5");
+		//add_equation("b = pi - 3");
 
-		add_equation("g(x,m,b) = m*x + b");
-		add_equation("h(x) = g(x, m,b)");
-		add_equation("m = 0.5");
-		add_equation("b = pi - 3");
-
-		//add_equation("x");
-		//add_equation("-x");
-		//add_equation("(-x)");
-		//add_equation("(((-x)))");
-		//add_equation("abs(-x)" );
-		//add_equation("max(x, -x)");
+		add_equation("a");
+		add_equation("a-b");
+		add_equation("-a + -b");
+		add_equation("-a + b -c * -d * e");
+		add_equation("-a^b");
+		add_equation("-a^-b");
+		add_equation("a^-b");
 
 		//add_equation("-x+2");
 		//add_equation("-x*2");
